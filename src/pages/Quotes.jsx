@@ -84,14 +84,16 @@ export default function Quotes() {
     // Round to nearest 100, with 50 as the midpoint
     const roundedWeight = Math.round(weight / 100) * 100;
     const charge = (roundedWeight / 100) * 25;
-    return charge;
+    // Round up to 2 decimal places
+    return Math.ceil(charge * 100) / 100;
   };
 
   const calculateTHCCharge = (amount) => {
     // Round up to nearest 100
     const roundedAmount = Math.ceil(amount / 100) * 100;
     const charge = (roundedAmount / 100) * 15;
-    return charge;
+    // Round up to 2 decimal places
+    return Math.ceil(charge * 100) / 100;
   };
 
   const handleCustomChargeChange = (index, field, value) => {
@@ -246,10 +248,13 @@ export default function Quotes() {
       return total + (parseFloat(charge.price) || 0);
     }, 0);
 
+    // Round up accessory total to 2 decimal places
+    const roundedAccessoryTotal = Math.ceil((accessoryTotal + customTotal) * 100) / 100;
+
     setQuoteResult(prev => ({
       ...prev,
-      accessoryTotal: accessoryTotal + customTotal,
-      total: prev.baseRate + prev.fuelSurcharge + prev.toll + accessoryTotal + customTotal
+      accessoryTotal: roundedAccessoryTotal,
+      total: Math.ceil((prev.baseRate + prev.fuelSurcharge + prev.toll + roundedAccessoryTotal) * 100) / 100
     }));
   }, [formData.selectedAccessories, formData.accessoryQuantities, formData.storageDays, formData.customCharges]);
 
@@ -265,9 +270,9 @@ export default function Quotes() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Quotes</h1>
-      <div className="bg-white shadow rounded-lg p-6">
+    <div className="p-1">
+      <h1 className="text-2xl font-bold mb-2">Quotes</h1>
+      <div className="bg-white shadow rounded-lg p-2">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>

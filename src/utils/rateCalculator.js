@@ -74,18 +74,22 @@ const calculateRate = (transport, zone, weight, unit) => {
     baseRate = 0;
   }
 
+  // Round up to 2 decimal places
+  baseRate = Math.ceil(baseRate * 100) / 100;
   const fuel = calculateFuel(baseRate);
   const toll = getTollForZone(zone);
   return { rate: baseRate, fuel, toll };
 };
 
 const calculateFuel = (rate) => {
-  return rate * 0.22;
+  const fuel = rate * 0.22;
+  // Round up to 2 decimal places
+  return Math.ceil(fuel * 100) / 100;
 };
 
 const calculateTransferRate = (weight, unit) => {
   const weightInLbs = convertToPounds(weight, unit);
-  const rate = weightInLbs * 0.03;
+  let rate = weightInLbs * 0.03;
   const fuel = rate * 0.22;
 
   if (rate < 35) {
@@ -93,13 +97,17 @@ const calculateTransferRate = (weight, unit) => {
   } else if (rate > 330) {
     return { rate: 330, fuel: 72.6, toll: 0 };
   }
-  return { rate, fuel, toll: 0 };
+  // Round up to 2 decimal places
+  rate = Math.ceil(rate * 100) / 100;
+  return { rate, fuel: Math.ceil(fuel * 100) / 100, toll: 0 };
 };
 
 const calculatePTTRate = (weight, unit) => {
   // Convert weight to kg if it's in lbs
   const weightInKg = unit === 'lbs' ? weight * 0.453592 : weight;
-  const rate = weightInKg * 0.12;
+  let rate = weightInKg * 0.12;
+  // Round up to 2 decimal places
+  rate = Math.ceil(rate * 100) / 100;
   return { rate, fuel: 0, toll: 0 };
 };
 
@@ -107,9 +115,12 @@ const calculateExportAndTransferRate = (transport, zone, weight, unit) => {
   const exportResult = calculateRate(transport, zone, weight, unit);
   const transferResult = calculateTransferRate(weight, unit);
   
+  const totalRate = exportResult.rate + transferResult.rate;
+  const totalFuel = exportResult.fuel + transferResult.fuel;
+  
   return {
-    rate: exportResult.rate + transferResult.rate,
-    fuel: exportResult.fuel + transferResult.fuel,
+    rate: Math.ceil(totalRate * 100) / 100,
+    fuel: Math.ceil(totalFuel * 100) / 100,
     toll: exportResult.toll // Only include export toll
   };
 };
