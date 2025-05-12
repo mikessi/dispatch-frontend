@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/dispatch-frontend/static/css/main.a1af52f4.css",
+    "main.js": "/dispatch-frontend/static/js/main.bc21a12a.js",
+    "index.html": "/dispatch-frontend/index.html",
+    "main.a1af52f4.css.map": "/dispatch-frontend/static/css/main.a1af52f4.css.map",
+    "main.bc21a12a.js.map": "/dispatch-frontend/static/js/main.bc21a12a.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.a1af52f4.css",
+    "static/js/main.bc21a12a.js"
+  ]
+}
