@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { DEFAULT_FUEL_PERCENT, calculateRate, calculateFuel, calculateTransferRate, calculatePTTRate, calculateExportAndTransferRate } from "../utils/rateCalculator";
 import { accessoryCharges } from "../utils/accessoryCharges";
 
-export default function Quotes() {
+export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
   const [formData, setFormData] = useState({
     weight: '',
     weightUnit: 'lbs',
@@ -174,7 +174,7 @@ export default function Quotes() {
           transferFuel: 0
         }));
       } else if (formData.moveType === 'Export + Transfer') {
-        const exportResult = calculateRate(formData.transportMode, formData.zone, weight, formData.weightUnit, formData.fuelPercent);
+        const exportResult = calculateRate(formData.transportMode, formData.zone, weight, formData.weightUnit, formData.fuelPercent, rateMultiplier);
         const transferResult = calculateTransferRate(weight, formData.weightUnit, formData.fuelPercent);
         setQuoteResult(prev => ({
           ...prev,
@@ -189,7 +189,7 @@ export default function Quotes() {
           transferFuel: transferResult.fuel
         }));
       } else {
-        result = calculateRate(formData.transportMode, formData.zone, weight, formData.weightUnit, formData.fuelPercent);
+        result = calculateRate(formData.transportMode, formData.zone, weight, formData.weightUnit, formData.fuelPercent, rateMultiplier);
         setQuoteResult(prev => ({
           ...prev,
           baseRate: result.rate,
@@ -217,7 +217,7 @@ export default function Quotes() {
         transferFuel: 0
       }));
     }
-  }, [formData]);
+  }, [formData, rateMultiplier]);
 
   useEffect(() => {
     const accessoryTotal = formData.selectedAccessories.reduce((total, accessory) => {
@@ -274,7 +274,7 @@ export default function Quotes() {
 
   return (
     <div className="p-1">
-      <h1 className="text-2xl font-bold mb-2">Quotes</h1>
+      <h1 className="text-2xl font-bold mb-2">{title}</h1>
       <div className="bg-white shadow rounded-lg p-2">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">

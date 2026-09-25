@@ -16,6 +16,7 @@ export default function App() {
       <main className="ml-64 w-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
         <Routes>
           <Route path="/quotes" element={<Quotes />} />
+          <Route path="/quotes-plus-15" element={<Quotes key="quotes-plus-15" title="Quotes+15%" rateMultiplier={1.15} />} />
           {/* Temporarily disabled:
           <Route path="/dispatch" element={<DispatchBoard />} />
           <Route path="/drivers" element={<DriverList />} />

@@ -1,4 +1,5 @@
-const getRateForZone = (transport, zone) => {
+// rateMultiplier scales every zone rate (MIN, per-lb tiers, MAX), e.g. 1.15 for +15%
+const getRateForZone = (transport, zone, rateMultiplier = 1) => {
   const rates = {
     Air: {
       A: { MIN: 35.00, "100": 0.0752, "1000": 0.0638, "2000": 0.0503, "3000": 0.0415, "5000": 0.0325, "10000": 0.0280, MAX: 300 },
@@ -18,7 +19,11 @@ const getRateForZone = (transport, zone) => {
     }
   };
 
-  return rates[transport]?.[zone] || null;
+  const zoneRates = rates[transport]?.[zone];
+  if (!zoneRates) return null;
+  return Object.fromEntries(
+    Object.entries(zoneRates).map(([tier, value]) => [tier, value * rateMultiplier])
+  );
 };
 
 const calcBetterRate = (first, second) => {
@@ -43,9 +48,9 @@ const convertToPounds = (weight, unit) => {
 
 const DEFAULT_FUEL_PERCENT = 22;
 
-const calculateRate = (transport, zone, weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT) => {
+const calculateRate = (transport, zone, weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT, rateMultiplier = 1) => {
   const weightInLbs = convertToPounds(weight, unit);
-  const rates = getRateForZone(transport, zone);
+  const rates = getRateForZone(transport, zone, rateMultiplier);
   if (!rates) return 0;
 
   let baseRate;
@@ -114,8 +119,8 @@ const calculatePTTRate = (weight, unit) => {
   return { rate, fuel: 0, toll: 0 };
 };
 
-const calculateExportAndTransferRate = (transport, zone, weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT) => {
-  const exportResult = calculateRate(transport, zone, weight, unit, fuelPercent);
+const calculateExportAndTransferRate = (transport, zone, weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT, rateMultiplier = 1) => {
+  const exportResult = calculateRate(transport, zone, weight, unit, fuelPercent, rateMultiplier);
   const transferResult = calculateTransferRate(weight, unit, fuelPercent);
   
   const totalRate = exportResult.rate + transferResult.rate;
