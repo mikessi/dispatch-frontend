@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { calculateRate, calculateFuel, calculateTransferRate, calculatePTTRate, calculateExportAndTransferRate } from "../utils/rateCalculator";
+import { DEFAULT_FUEL_PERCENT, calculateRate, calculateFuel, calculateTransferRate, calculatePTTRate, calculateExportAndTransferRate } from "../utils/rateCalculator";
 import { accessoryCharges } from "../utils/accessoryCharges";
 
 export default function Quotes() {
@@ -9,6 +9,7 @@ export default function Quotes() {
     moveType: 'Import/Export',
     zone: 'A',
     transportMode: 'Air',
+    fuelPercent: DEFAULT_FUEL_PERCENT,
     selectedAccessories: [],
     accessoryQuantities: {},
     storageDays: {},
@@ -145,7 +146,7 @@ export default function Quotes() {
 
       let result;
       if (formData.moveType === 'Transfer') {
-        result = calculateTransferRate(weight, formData.weightUnit);
+        result = calculateTransferRate(weight, formData.weightUnit, formData.fuelPercent);
         setQuoteResult(prev => ({
           ...prev,
           baseRate: result.rate,
@@ -173,8 +174,8 @@ export default function Quotes() {
           transferFuel: 0
         }));
       } else if (formData.moveType === 'Export + Transfer') {
-        const exportResult = calculateRate(formData.transportMode, formData.zone, weight, formData.weightUnit);
-        const transferResult = calculateTransferRate(weight, formData.weightUnit);
+        const exportResult = calculateRate(formData.transportMode, formData.zone, weight, formData.weightUnit, formData.fuelPercent);
+        const transferResult = calculateTransferRate(weight, formData.weightUnit, formData.fuelPercent);
         setQuoteResult(prev => ({
           ...prev,
           baseRate: exportResult.rate + transferResult.rate,
@@ -188,7 +189,7 @@ export default function Quotes() {
           transferFuel: transferResult.fuel
         }));
       } else {
-        result = calculateRate(formData.transportMode, formData.zone, weight, formData.weightUnit);
+        result = calculateRate(formData.transportMode, formData.zone, weight, formData.weightUnit, formData.fuelPercent);
         setQuoteResult(prev => ({
           ...prev,
           baseRate: result.rate,
@@ -264,6 +265,8 @@ export default function Quotes() {
       if (value === '' || /^\d*\.?\d*$/.test(value)) {
         setFormData(prev => ({ ...prev, [name]: value }));
       }
+    } else if (name === 'fuelPercent') {
+      setFormData(prev => ({ ...prev, fuelPercent: Number(value) }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -334,6 +337,23 @@ export default function Quotes() {
                 <option value="D">D</option>
                 <option value="E">E</option>
                 <option value="F">F</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fuel Surcharge
+              </label>
+              <select
+                name="fuelPercent"
+                value={formData.fuelPercent}
+                onChange={handleChange}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                disabled={formData.moveType === 'PTT'}
+              >
+                {Array.from({ length: 31 }, (_, i) => 20 + i).map(percent => (
+                  <option key={percent} value={percent}>{percent}%</option>
+                ))}
               </select>
             </div>
 
@@ -556,7 +576,7 @@ export default function Quotes() {
               </div>
               {formData.moveType !== 'PTT' && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Fuel Surcharge:</span>
+                  <span className="text-gray-600">Fuel Surcharge ({formData.fuelPercent}%):</span>
                   <span className="font-medium">${quoteResult.fuelSurcharge.toFixed(2)}</span>
                 </div>
               )}

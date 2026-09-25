@@ -41,7 +41,9 @@ const convertToPounds = (weight, unit) => {
   return unit === 'kg' ? weight * 2.20462 : weight;
 };
 
-const calculateRate = (transport, zone, weight, unit) => {
+const DEFAULT_FUEL_PERCENT = 22;
+
+const calculateRate = (transport, zone, weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT) => {
   const weightInLbs = convertToPounds(weight, unit);
   const rates = getRateForZone(transport, zone);
   if (!rates) return 0;
@@ -76,30 +78,31 @@ const calculateRate = (transport, zone, weight, unit) => {
 
   // Round up to 2 decimal places
   baseRate = Math.ceil(baseRate * 100) / 100;
-  const fuel = calculateFuel(baseRate);
+  const fuel = calculateFuel(baseRate, fuelPercent);
   const toll = getTollForZone(zone);
   return { rate: baseRate, fuel, toll };
 };
 
-const calculateFuel = (rate) => {
-  const fuel = rate * 0.22;
+const calculateFuel = (rate, fuelPercent = DEFAULT_FUEL_PERCENT) => {
+  // Fuel in cents; toFixed strips float noise so e.g. 35 * 22% stays 770, not 771
+  const fuelCents = Number((rate * fuelPercent).toFixed(6));
   // Round up to 2 decimal places
-  return Math.ceil(fuel * 100) / 100;
+  return Math.ceil(fuelCents) / 100;
 };
 
-const calculateTransferRate = (weight, unit) => {
+const calculateTransferRate = (weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT) => {
   const weightInLbs = convertToPounds(weight, unit);
   let rate = weightInLbs * 0.03;
-  const fuel = rate * 0.22;
 
   if (rate < 35) {
-    return { rate: 35, fuel: 7.7, toll: 0 };
+    return { rate: 35, fuel: calculateFuel(35, fuelPercent), toll: 0 };
   } else if (rate > 330) {
-    return { rate: 330, fuel: 72.6, toll: 0 };
+    return { rate: 330, fuel: calculateFuel(330, fuelPercent), toll: 0 };
   }
+  const fuel = calculateFuel(rate, fuelPercent);
   // Round up to 2 decimal places
   rate = Math.ceil(rate * 100) / 100;
-  return { rate, fuel: Math.ceil(fuel * 100) / 100, toll: 0 };
+  return { rate, fuel, toll: 0 };
 };
 
 const calculatePTTRate = (weight, unit) => {
@@ -111,9 +114,9 @@ const calculatePTTRate = (weight, unit) => {
   return { rate, fuel: 0, toll: 0 };
 };
 
-const calculateExportAndTransferRate = (transport, zone, weight, unit) => {
-  const exportResult = calculateRate(transport, zone, weight, unit);
-  const transferResult = calculateTransferRate(weight, unit);
+const calculateExportAndTransferRate = (transport, zone, weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT) => {
+  const exportResult = calculateRate(transport, zone, weight, unit, fuelPercent);
+  const transferResult = calculateTransferRate(weight, unit, fuelPercent);
   
   const totalRate = exportResult.rate + transferResult.rate;
   const totalFuel = exportResult.fuel + transferResult.fuel;
@@ -126,6 +129,7 @@ const calculateExportAndTransferRate = (transport, zone, weight, unit) => {
 };
 
 export {
+  DEFAULT_FUEL_PERCENT,
   calculateRate,
   calculateFuel,
   calculateTransferRate,
