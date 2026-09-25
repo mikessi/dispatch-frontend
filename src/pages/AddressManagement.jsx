@@ -102,72 +102,76 @@ export default function AddressManagement() {
   });
 
   return (
-    <div className="p-6">
+    <div className="p-2 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Address Management</h1>
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">Address Management</h1>
+          <p className="text-gray-600">Manage pickup and delivery locations</p>
+        </div>
         <button
           onClick={handleAdd}
-          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:shadow-xl transition-all duration-300 font-semibold flex items-center space-x-2"
         >
-          + Add Address
+          <span className="text-xl">+</span>
+          <span>Add Address</span>
         </button>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-6">
         <input
           type="text"
-          placeholder="Search by company, address, city, state, or zip..."
+          placeholder="🔍 Search by company, address, city, state, or zip..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all shadow-sm text-lg"
         />
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="card-modern shadow-xl overflow-hidden">
+        <div className="overflow-x-auto custom-scrollbar">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-gradient-to-r from-purple-50 to-blue-50 sticky top-0 z-10">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">City/State/Zip</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phones</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Emails</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Appointment</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Company Name</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Address</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">City/State/Zip</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Type</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Hours</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Contact</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Phones</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Emails</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Appointment</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredAddresses.map((address) => (
                 <tr key={address.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">{address.companyName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{address.address}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-gray-200">{address.companyName}</td>
+                  <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-gray-200">{address.address}</td>
+                  <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-gray-200">
                     {address.city}, {address.state} {address.zip}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{address.type}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{address.hours}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{address.contactName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-gray-200">{address.type}</td>
+                  <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-gray-200">{address.hours}</td>
+                  <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-gray-200">{address.contactName}</td>
+                  <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-gray-200">
                     {address.phones.map((phone, index) => (
                       <div key={index}>{phone}</div>
                     ))}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-gray-200">
                     {address.emails.map((email, index) => (
                       <div key={index}>{email}</div>
                     ))}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-2.5 py-2.5 whitespace-nowrap border-r border-gray-200">
                     {address.appointmentRequired ? 'Yes' : 'No'}
                     {address.appointmentRequired && (
                       <div className="text-xs text-gray-500">{address.appointmentNotes}</div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-2.5 py-2.5 whitespace-nowrap">
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleEdit(address)}

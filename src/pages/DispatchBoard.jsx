@@ -276,23 +276,27 @@ export default function DispatchBoard() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-2 max-w-full">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Dispatch Board</h1>
-        <div className="flex space-x-4">
-            <button
-            onClick={handleAdd}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-            Add New Job
-            </button>
-          </div>
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">Dispatch Board</h1>
+          <p className="text-gray-600">Manage and track all dispatch jobs</p>
         </div>
+        <div className="flex space-x-4">
+          <button
+            onClick={handleAdd}
+            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-xl transition-all duration-300 font-semibold flex items-center space-x-2"
+          >
+            <span className="text-xl">+</span>
+            <span>Add New Job</span>
+          </button>
+        </div>
+      </div>
 
-      <div className="bg-white rounded-lg shadow">
-        <div className="overflow-x-auto max-h-[calc(100vh-200px)]">
+      <div className="card-modern shadow-xl overflow-hidden">
+        <div className="overflow-x-auto max-h-[calc(100vh-200px)] custom-scrollbar">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 sticky top-0 z-20">
+            <thead className="bg-gradient-to-r from-purple-50 to-blue-50 sticky top-0 z-20">
             <tr>
                 {columns.map((column) => (
                   <ResizableTableHeader
@@ -303,7 +307,7 @@ export default function DispatchBoard() {
                 ))}
             </tr>
           </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-100">
               {loads
                 .sort((a, b) => new Date(a.date) - new Date(b.date))
                 .map((load, index) => {
@@ -313,9 +317,9 @@ export default function DispatchBoard() {
                   return (
                     <React.Fragment key={load.id}>
                       {showDateHeader && (
-                        <tr className="bg-gray-100 sticky top-[48px] z-10">
-                          <td colSpan="16" className="px-6 py-4 text-sm font-semibold text-gray-700 bg-gray-100" style={{ height: '48px' }}>
-                            {new Date(load.date).toLocaleDateString('en-US', {
+                        <tr className="bg-gradient-to-r from-purple-100 to-blue-100 sticky top-[32px] z-10">
+                          <td colSpan="16" className="px-4 py-3 text-sm font-bold text-purple-800" style={{ height: '40px' }}>
+                            📅 {new Date(load.date).toLocaleDateString('en-US', {
                               weekday: 'long',
                               year: 'numeric',
                               month: 'long',
@@ -324,14 +328,14 @@ export default function DispatchBoard() {
                           </td>
                         </tr>
                       )}
-                      <tr className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[0].width }}>{load.jobNumber}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[1].width }}>
+                      <tr className="hover:bg-purple-50 transition-colors duration-200">
+                        <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-100" style={{ width: columns[0].width }}>{load.jobNumber}</td>
+                        <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 border-r border-gray-100" style={{ width: columns[1].width }}>
                           {new Date(load.date).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[2].width }}>{load.company}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[3].width }}>{load.contact}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[4].width }}>
+                        <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 border-r border-gray-100" style={{ width: columns[2].width }}>{load.company}</td>
+                        <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 border-r border-gray-100" style={{ width: columns[3].width }}>{load.contact}</td>
+                        <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 border-r border-gray-100" style={{ width: columns[4].width }}>
                           <div className="relative w-full">
                             <input
                               type="text"
@@ -339,14 +343,14 @@ export default function DispatchBoard() {
                               onChange={(e) => handleInputChange(e, load.id, 'assignedTruck')}
                               onFocus={() => handleFocus('assignedTruck', load.id)}
                               onBlur={() => handleBlur('assignedTruck')}
-                              className="w-full px-2 py-1 border rounded-md"
+                              className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
                             />
                             {suggestions.truck.length > 0 && (
-                              <div className="absolute z-30 mt-1 w-full bg-white rounded-md shadow-lg max-h-48 overflow-y-auto">
+                              <div className="absolute z-30 mt-1 w-full bg-white rounded-xl shadow-2xl max-h-48 overflow-y-auto border-2 border-purple-100">
                                 {suggestions.truck.map(truck => (
                                   <div
                                     key={truck}
-                                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                    className="px-4 py-2 hover:bg-purple-50 cursor-pointer transition-colors"
                                     onClick={() => handleSuggestionClick(load.id, 'assignedTruck', truck)}
                                   >
                                     {truck}
@@ -356,7 +360,7 @@ export default function DispatchBoard() {
                             )}
       </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[5].width }}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: columns[5].width }}>
                           <select
                             value={load.status || 'Pending'}
                             onChange={(e) => handleInputChange(e, load.id, 'status')}
@@ -367,7 +371,7 @@ export default function DispatchBoard() {
                             ))}
                           </select>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[6].width }}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: columns[6].width }}>
                           <div className="relative w-full">
                       <input
                               type="text"
@@ -392,7 +396,7 @@ export default function DispatchBoard() {
                             )}
                           </div>
                   </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[7].width }}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: columns[7].width }}>
                           <div className="relative w-full">
                             <input
                               type="text"
@@ -417,7 +421,7 @@ export default function DispatchBoard() {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[8].width }}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: columns[8].width }}>
                           <input
                             type="date"
                             value={load.pickupDate || ''}
@@ -425,7 +429,7 @@ export default function DispatchBoard() {
                             className="w-full px-2 py-1 border rounded-md"
                           />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[9].width }}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: columns[9].width }}>
                           <input
                             type="date"
                             value={load.deliveryDate || ''}
@@ -433,7 +437,7 @@ export default function DispatchBoard() {
                             className="w-full px-2 py-1 border rounded-md"
                           />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[10].width }}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: columns[10].width }}>
                           <div className="flex space-x-2 w-full">
                             <input
                               type="time"
@@ -449,7 +453,7 @@ export default function DispatchBoard() {
                             />
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[11].width }}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: columns[11].width }}>
                           <input
                             type="text"
                             value={load.pro || ''}
@@ -457,7 +461,7 @@ export default function DispatchBoard() {
                             className="w-full px-2 py-1 border rounded-md"
                           />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[12].width }}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: columns[12].width }}>
                           <input
                             type="text"
                             value={load.reference || ''}
@@ -465,7 +469,7 @@ export default function DispatchBoard() {
                             className="w-full px-2 py-1 border rounded-md"
                           />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[13].width }}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: columns[13].width }}>
                           <div className="grid grid-cols-2 gap-2 w-full">
                             <div>
                               <span className="text-gray-500">Pieces:</span> {load.pcsCount}
@@ -478,7 +482,7 @@ export default function DispatchBoard() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[14].width }}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: columns[14].width }}>
                           <input
                             type="text"
                             value={load.notes || ''}
@@ -486,7 +490,7 @@ export default function DispatchBoard() {
                             className="w-full px-2 py-1 border rounded-md"
                           />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" style={{ width: columns[15].width }}>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200" style={{ width: columns[15].width }}>
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handleView(load)}

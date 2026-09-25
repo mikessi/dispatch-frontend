@@ -51,48 +51,58 @@ export default function TruckManagement() {
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="p-2 min-h-screen max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Truck Management</h1>
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">Truck Management</h1>
+          <p className="text-gray-600">Manage your fleet of trucks</p>
+        </div>
         <button
           onClick={handleAdd}
-          className="bg-green-600 text-white px-4 py-2 rounded"
+          className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:shadow-xl transition-all duration-300 font-semibold flex items-center space-x-2"
         >
-          + Add Truck
+          <span className="text-xl">+</span>
+          <span>Add Truck</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="card-modern shadow-xl overflow-hidden">
+        <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full">
-            <thead className="bg-gray-50 sticky top-0 z-10">
+            <thead className="bg-gradient-to-r from-purple-50 to-blue-50 sticky top-0 z-10">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Truck Number</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Make</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Truck Number</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Make</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Model</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Year</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-purple-800 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-right text-xs font-bold text-purple-800 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-100">
               {trucks.map(truck => (
-                <tr key={truck.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{truck.number}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{truck.make}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{truck.model}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{truck.year}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{truck.status}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <tr key={truck.id} className="hover:bg-purple-50 transition-colors duration-200">
+                  <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{truck.number}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-700">{truck.make}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-700">{truck.model}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-700">{truck.year}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      truck.status === 'Available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {truck.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                     <button
                       onClick={() => handleEdit(truck)}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
+                      className="px-4 py-2 text-blue-600 hover:text-white hover:bg-blue-600 border-2 border-blue-600 rounded-lg transition-all font-medium"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => handleDelete(truck.id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="px-4 py-2 text-red-600 hover:text-white hover:bg-red-600 border-2 border-red-600 rounded-lg transition-all font-medium"
                     >
                       Delete
                     </button>
@@ -105,81 +115,79 @@ export default function TruckManagement() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+          <div className="card-modern p-8 w-full max-w-md shadow-2xl">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6">
               {editingTruck ? "Edit Truck" : "Add New Truck"}
             </h2>
             <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Truck Number</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Truck Number</label>
                   <input
                     type="text"
                     value={formData.number}
                     onChange={(e) => setFormData({ ...formData, number: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="block w-full px-4 py-3 rounded-xl border-2 border-gray-200 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Make</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Make</label>
                   <input
                     type="text"
                     value={formData.make}
                     onChange={(e) => setFormData({ ...formData, make: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="block w-full px-4 py-3 rounded-xl border-2 border-gray-200 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Model</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Model</label>
                   <input
                     type="text"
                     value={formData.model}
                     onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="block w-full px-4 py-3 rounded-xl border-2 border-gray-200 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Year</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Year</label>
                   <input
                     type="text"
                     value={formData.year}
                     onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="block w-full px-4 py-3 rounded-xl border-2 border-gray-200 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Status</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    required
+                    className="block w-full px-4 py-3 rounded-xl border-2 border-gray-200 shadow-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
                   >
                     <option value="Available">Available</option>
-                    <option value="In Service">In Service</option>
+                    <option value="In Use">In Use</option>
                     <option value="Maintenance">Maintenance</option>
-                    <option value="Out of Service">Out of Service</option>
                   </select>
                 </div>
               </div>
-              <div className="mt-6 flex justify-end space-x-3">
+              <div className="flex space-x-3 mt-8">
+                <button
+                  type="submit"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-xl transition-all duration-300 font-semibold"
+                >
+                  {editingTruck ? "Update" : "Add"} Truck
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all duration-300 font-semibold"
                 >
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  {editingTruck ? "Update" : "Add"}
                 </button>
               </div>
             </form>
