@@ -46,7 +46,7 @@ const convertToPounds = (weight, unit) => {
   return unit === 'kg' ? weight * 2.20462 : weight;
 };
 
-const DEFAULT_FUEL_PERCENT = 22;
+const DEFAULT_FUEL_PERCENT = 30;
 
 const calculateRate = (transport, zone, weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT, rateMultiplier = 1) => {
   const weightInLbs = convertToPounds(weight, unit);

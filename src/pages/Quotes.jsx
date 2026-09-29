@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { DEFAULT_FUEL_PERCENT, calculateRate, calculateFuel, calculateTransferRate, calculatePTTRate, calculateExportAndTransferRate } from "../utils/rateCalculator";
 import { accessoryCharges } from "../utils/accessoryCharges";
+import CityZoneSearch from "../components/CityZoneSearch";
 
 export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
   const [formData, setFormData] = useState({
@@ -278,6 +279,8 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
       <div className="bg-white shadow rounded-lg p-2">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
+            <CityZoneSearch onSelect={(zone) => setFormData(prev => ({ ...prev, zone }))} />
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Weight
