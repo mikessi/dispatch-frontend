@@ -1,25 +1,7 @@
+// priceList is the full rate config (see defaultRates.js); saved settings are passed in here.
 // rateMultiplier scales every zone rate (MIN, per-lb tiers, MAX), e.g. 1.15 for +15%
-const getRateForZone = (transport, zone, rateMultiplier = 1) => {
-  const rates = {
-    Air: {
-      A: { MIN: 35.00, "100": 0.0752, "1000": 0.0638, "2000": 0.0503, "3000": 0.0415, "5000": 0.0325, "10000": 0.0280, MAX: 300 },
-      B: { MIN: 45.00, "100": 0.0838, "1000": 0.0715, "2000": 0.0550, "3000": 0.0465, "5000": 0.0350, "10000": 0.0300, MAX: 325 },
-      C: { MIN: 55.00, "100": 0.0900, "1000": 0.0760, "2000": 0.0615, "3000": 0.0515, "5000": 0.0415, "10000": 0.0300, MAX: 325 },
-      D: { MIN: 65.00, "100": 0.0975, "1000": 0.0825, "2000": 0.0698, "3000": 0.0605, "5000": 0.0525, "10000": 0.0325, MAX: 350 },
-      E: { MIN: 90.00, "100": 0.1105, "1000": 0.1025, "2000": 0.0875, "3000": 0.0738, "5000": 0.0650, "10000": 0.0400, MAX: 400 },
-      F: { MIN: 150.00, "100": 0.1238, "1000": 0.1154, "2000": 0.0968, "3000": 0.0819, "5000": 0.0731, "10000": 0.0430, MAX: 1000 }
-    },
-    Ocean: {
-      A: { MIN: 35.00, "100": 0.0538, "1000": 0.0475, "2000": 0.0415, "3000": 0.0375, "5000": 0.0305, "10000": 0.0250, MAX: 300 },
-      B: { MIN: 45.00, "100": 0.0595, "1000": 0.0512, "2000": 0.0425, "3000": 0.0398, "5000": 0.0315, "10000": 0.0275, MAX: 325 },
-      C: { MIN: 55.00, "100": 0.0755, "1000": 0.0595, "2000": 0.0475, "3000": 0.0415, "5000": 0.0365, "10000": 0.0300, MAX: 325 },
-      D: { MIN: 65.00, "100": 0.0826, "1000": 0.0645, "2000": 0.0515, "3000": 0.0465, "5000": 0.0405, "10000": 0.0325, MAX: 350 },
-      E: { MIN: 90.00, "100": 0.1098, "1000": 0.1018, "2000": 0.0855, "3000": 0.0715, "5000": 0.0645, "10000": 0.0400, MAX: 400 },
-      F: { MIN: 150.00, "100": 0.1193, "1000": 0.1125, "2000": 0.0965, "3000": 0.0800, "5000": 0.0730, "10000": 0.0425, MAX: 1000 }
-    }
-  };
-
-  const zoneRates = rates[transport]?.[zone];
+const getRateForZone = (priceList, transport, zone, rateMultiplier = 1) => {
+  const zoneRates = priceList.zoneRates[transport]?.[zone];
   if (!zoneRates) return null;
   return Object.fromEntries(
     Object.entries(zoneRates).map(([tier, value]) => [tier, value * rateMultiplier])
@@ -30,16 +12,8 @@ const calcBetterRate = (first, second) => {
   return first > second ? second : first;
 };
 
-const getTollForZone = (zone) => {
-  const tolls = {
-    'A': 0,
-    'B': 5,
-    'C': 15,
-    'D': 25,
-    'E': 35,
-    'F': 55
-  };
-  return tolls[zone] || 0;
+const getTollForZone = (priceList, zone) => {
+  return priceList.tolls[zone] || 0;
 };
 
 const convertToPounds = (weight, unit) => {
@@ -48,9 +22,9 @@ const convertToPounds = (weight, unit) => {
 
 const DEFAULT_FUEL_PERCENT = 30;
 
-const calculateRate = (transport, zone, weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT, rateMultiplier = 1) => {
+const calculateRate = (priceList, transport, zone, weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT, rateMultiplier = 1) => {
   const weightInLbs = convertToPounds(weight, unit);
-  const rates = getRateForZone(transport, zone, rateMultiplier);
+  const rates = getRateForZone(priceList, transport, zone, rateMultiplier);
   if (!rates) return 0;
 
   let baseRate;
@@ -81,10 +55,15 @@ const calculateRate = (transport, zone, weight, unit, fuelPercent = DEFAULT_FUEL
     baseRate = 0;
   }
 
+  // The zone minimum is a floor for every tier, not just the first
+  if (baseRate > 0) {
+    baseRate = Math.max(baseRate, rates.MIN);
+  }
+
   // Round up to 2 decimal places
   baseRate = Math.ceil(baseRate * 100) / 100;
   const fuel = calculateFuel(baseRate, fuelPercent);
-  const toll = getTollForZone(zone);
+  const toll = getTollForZone(priceList, zone);
   return { rate: baseRate, fuel, toll };
 };
 
@@ -95,14 +74,15 @@ const calculateFuel = (rate, fuelPercent = DEFAULT_FUEL_PERCENT) => {
   return Math.ceil(fuelCents) / 100;
 };
 
-const calculateTransferRate = (weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT) => {
+const calculateTransferRate = (priceList, weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT) => {
+  const { perLb, min, max } = priceList.transfer;
   const weightInLbs = convertToPounds(weight, unit);
-  let rate = weightInLbs * 0.03;
+  let rate = weightInLbs * perLb;
 
-  if (rate < 35) {
-    return { rate: 35, fuel: calculateFuel(35, fuelPercent), toll: 0 };
-  } else if (rate > 330) {
-    return { rate: 330, fuel: calculateFuel(330, fuelPercent), toll: 0 };
+  if (rate < min) {
+    return { rate: min, fuel: calculateFuel(min, fuelPercent), toll: 0 };
+  } else if (rate > max) {
+    return { rate: max, fuel: calculateFuel(max, fuelPercent), toll: 0 };
   }
   const fuel = calculateFuel(rate, fuelPercent);
   // Round up to 2 decimal places
@@ -110,18 +90,18 @@ const calculateTransferRate = (weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT)
   return { rate, fuel, toll: 0 };
 };
 
-const calculatePTTRate = (weight, unit) => {
+const calculatePTTRate = (priceList, weight, unit) => {
   // Convert weight to kg if it's in lbs
   const weightInKg = unit === 'lbs' ? weight * 0.453592 : weight;
-  let rate = weightInKg * 0.12;
+  let rate = weightInKg * priceList.ptt.perKg;
   // Round up to 2 decimal places
   rate = Math.ceil(rate * 100) / 100;
   return { rate, fuel: 0, toll: 0 };
 };
 
-const calculateExportAndTransferRate = (transport, zone, weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT, rateMultiplier = 1) => {
-  const exportResult = calculateRate(transport, zone, weight, unit, fuelPercent, rateMultiplier);
-  const transferResult = calculateTransferRate(weight, unit, fuelPercent);
+const calculateExportAndTransferRate = (priceList, transport, zone, weight, unit, fuelPercent = DEFAULT_FUEL_PERCENT, rateMultiplier = 1) => {
+  const exportResult = calculateRate(priceList, transport, zone, weight, unit, fuelPercent, rateMultiplier);
+  const transferResult = calculateTransferRate(priceList, weight, unit, fuelPercent);
   
   const totalRate = exportResult.rate + transferResult.rate;
   const totalFuel = exportResult.fuel + transferResult.fuel;

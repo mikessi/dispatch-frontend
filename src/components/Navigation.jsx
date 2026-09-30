@@ -5,14 +5,15 @@ import {
   UserGroupIcon,
   MapPinIcon,
   DocumentDuplicateIcon,
-  ClipboardDocumentListIcon
+  ClipboardDocumentListIcon,
+  Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 
 export default function Navigation() {
   // Only Quotes is enabled for now; uncomment items to re-enable pages.
   const navItems = [
     { path: '/quotes', label: 'Quotes', icon: DocumentTextIcon },
-    { path: '/quotes-plus-15', label: 'Quotes+15%', icon: DocumentTextIcon },
+    { path: '/rate-settings', label: 'Rate Settings', icon: Cog6ToothIcon },
     // { path: '/dispatch', label: 'Dispatch Board', icon: ClipboardDocumentListIcon },
     // { path: '/drivers', label: 'Drivers', icon: UserGroupIcon },
     // { path: '/customers', label: 'Customers', icon: UserGroupIcon },

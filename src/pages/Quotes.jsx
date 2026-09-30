@@ -1,9 +1,24 @@
 import { useState, useEffect } from "react";
 import { DEFAULT_FUEL_PERCENT, calculateRate, calculateFuel, calculateTransferRate, calculatePTTRate, calculateExportAndTransferRate } from "../utils/rateCalculator";
-import { accessoryCharges } from "../utils/accessoryCharges";
+import { useRates } from "../context/RatesContext";
 import CityZoneSearch from "../components/CityZoneSearch";
 
-export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
+const DETENTION = "Detention $60/Hour";
+const STORAGE = "Storage Charge $10/Pallet/Per Day";
+
+const MARKUP_OPTIONS = [5, 10, 15, 20, 25];
+
+export default function Quotes() {
+  const { rates } = useRates();
+  const { accessoryCharges } = rates;
+
+  // Keep the dollar amounts baked into these names in sync with the saved prices
+  const accessoryLabel = (name) => {
+    if (name === DETENTION) return `Detention $${accessoryCharges[DETENTION]}/Hour`;
+    if (name === STORAGE) return `Storage Charge $${accessoryCharges[STORAGE]}/Pallet/Per Day`;
+    return name;
+  };
+
   const [formData, setFormData] = useState({
     weight: '',
     weightUnit: 'lbs',
@@ -11,11 +26,15 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
     zone: 'A',
     transportMode: 'Air',
     fuelPercent: DEFAULT_FUEL_PERCENT,
+    markupEnabled: false,
+    markupPercent: 15,
     selectedAccessories: [],
     accessoryQuantities: {},
     storageDays: {},
     customCharges: []
   });
+
+  const [notes, setNotes] = useState('');
 
   const [quoteResult, setQuoteResult] = useState({
     baseRate: 0,
@@ -85,7 +104,7 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
   const calculateInsideDeliveryCharge = (weight) => {
     // Round to nearest 100, with 50 as the midpoint
     const roundedWeight = Math.round(weight / 100) * 100;
-    const charge = (roundedWeight / 100) * 25;
+    const charge = (roundedWeight / 100) * accessoryCharges["Inside Delivery | per 100Lbs"];
     // Round up to 2 decimal places
     return Math.ceil(charge * 100) / 100;
   };
@@ -93,7 +112,7 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
   const calculateTHCCharge = (amount) => {
     // Round up to nearest 100
     const roundedAmount = Math.ceil(amount / 100) * 100;
-    const charge = (roundedAmount / 100) * 15;
+    const charge = (roundedAmount / 100) * accessoryCharges["THC + Processing Fee per $100 Covered"];
     // Round up to 2 decimal places
     return Math.ceil(charge * 100) / 100;
   };
@@ -140,6 +159,10 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
     }));
   };
 
+  // Markup raises the zone rates (MIN, per-lb tiers, MAX); Transfer and PTT are unaffected
+  const rateMultiplier = formData.markupEnabled ? 1 + formData.markupPercent / 100 : 1;
+  const markupApplies = formData.moveType === 'Import/Export' || formData.moveType === 'Export + Transfer';
+
   useEffect(() => {
     if (formData.weight) {
       const weight = parseFloat(formData.weight);
@@ -147,7 +170,7 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
 
       let result;
       if (formData.moveType === 'Transfer') {
-        result = calculateTransferRate(weight, formData.weightUnit, formData.fuelPercent);
+        result = calculateTransferRate(rates, weight, formData.weightUnit, formData.fuelPercent);
         setQuoteResult(prev => ({
           ...prev,
           baseRate: result.rate,
@@ -161,7 +184,7 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
           transferFuel: result.fuel
         }));
       } else if (formData.moveType === 'PTT') {
-        result = calculatePTTRate(weight, formData.weightUnit);
+        result = calculatePTTRate(rates, weight, formData.weightUnit);
         setQuoteResult(prev => ({
           ...prev,
           baseRate: result.rate,
@@ -175,8 +198,8 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
           transferFuel: 0
         }));
       } else if (formData.moveType === 'Export + Transfer') {
-        const exportResult = calculateRate(formData.transportMode, formData.zone, weight, formData.weightUnit, formData.fuelPercent, rateMultiplier);
-        const transferResult = calculateTransferRate(weight, formData.weightUnit, formData.fuelPercent);
+        const exportResult = calculateRate(rates, formData.transportMode, formData.zone, weight, formData.weightUnit, formData.fuelPercent, rateMultiplier);
+        const transferResult = calculateTransferRate(rates, weight, formData.weightUnit, formData.fuelPercent);
         setQuoteResult(prev => ({
           ...prev,
           baseRate: exportResult.rate + transferResult.rate,
@@ -190,7 +213,7 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
           transferFuel: transferResult.fuel
         }));
       } else {
-        result = calculateRate(formData.transportMode, formData.zone, weight, formData.weightUnit, formData.fuelPercent, rateMultiplier);
+        result = calculateRate(rates, formData.transportMode, formData.zone, weight, formData.weightUnit, formData.fuelPercent, rateMultiplier);
         setQuoteResult(prev => ({
           ...prev,
           baseRate: result.rate,
@@ -218,7 +241,7 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
         transferFuel: 0
       }));
     }
-  }, [formData, rateMultiplier]);
+  }, [formData, rateMultiplier, rates]);
 
   useEffect(() => {
     const accessoryTotal = formData.selectedAccessories.reduce((total, accessory) => {
@@ -238,7 +261,7 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
         return total + (basePrice * pallets * days);
       } else if (accessory === "Detention $60/Hour") {
         const minutes = formData.accessoryQuantities[accessory] || 0;
-        return total + (minutes * 1);
+        return total + (minutes * accessoryCharges[DETENTION] / 60);
       } else if (accessory === "Custom") {
         return total;
       }
@@ -258,7 +281,7 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
       accessoryTotal: roundedAccessoryTotal,
       total: Math.ceil((prev.baseRate + prev.fuelSurcharge + prev.toll + roundedAccessoryTotal) * 100) / 100
     }));
-  }, [formData.selectedAccessories, formData.accessoryQuantities, formData.storageDays, formData.customCharges]);
+  }, [formData.selectedAccessories, formData.accessoryQuantities, formData.storageDays, formData.customCharges, accessoryCharges]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -266,8 +289,10 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
       if (value === '' || /^\d*\.?\d*$/.test(value)) {
         setFormData(prev => ({ ...prev, [name]: value }));
       }
-    } else if (name === 'fuelPercent') {
-      setFormData(prev => ({ ...prev, fuelPercent: Number(value) }));
+    } else if (name === 'fuelPercent' || name === 'markupPercent') {
+      setFormData(prev => ({ ...prev, [name]: Number(value) }));
+    } else if (name === 'markupEnabled') {
+      setFormData(prev => ({ ...prev, markupEnabled: e.target.checked }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -275,7 +300,7 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
 
   return (
     <div className="p-1">
-      <h1 className="text-2xl font-bold mb-2">{title}</h1>
+      <h1 className="text-2xl font-bold mb-2">Quotes</h1>
       <div className="bg-white shadow rounded-lg p-2">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
@@ -362,6 +387,39 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
+                Markup
+              </label>
+              <div className="flex items-center gap-3">
+                <label className="inline-flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    name="markupEnabled"
+                    checked={formData.markupEnabled}
+                    onChange={handleChange}
+                    disabled={!markupApplies}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  Apply markup
+                </label>
+                <select
+                  name="markupPercent"
+                  value={formData.markupPercent}
+                  onChange={handleChange}
+                  disabled={!markupApplies || !formData.markupEnabled}
+                  className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+                >
+                  {MARKUP_OPTIONS.map(percent => (
+                    <option key={percent} value={percent}>{percent}%</option>
+                  ))}
+                </select>
+              </div>
+              {!markupApplies && (
+                <p className="mt-1 text-xs text-gray-500">Markup only applies to zone rates (Import/Export, Export + Transfer).</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Transport Mode
               </label>
               <div className="flex space-x-4">
@@ -405,7 +463,7 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
                       <span className="text-sm">
-                        {name} {name !== "Empty Pallet" && name !== "Inside Delivery | per 100Lbs" && name !== "THC + Processing Fee per $100 Covered" && name !== "In/Out Charge" && name !== "Storage Charge $10/Pallet/Per Day" && name !== "Detention $60/Hour" && name !== "Volume Charge Per Pallet" && `($${price})`}
+                        {accessoryLabel(name)} {name !== "Empty Pallet" && name !== "Inside Delivery | per 100Lbs" && name !== "THC + Processing Fee per $100 Covered" && name !== "In/Out Charge" && name !== "Storage Charge $10/Pallet/Per Day" && name !== "Detention $60/Hour" && name !== "Volume Charge Per Pallet" && `($${price})`}
                       </span>
                     </label>
                     {name === "Empty Pallet" && formData.selectedAccessories.includes(name) && (
@@ -554,7 +612,14 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Quote Summary</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Quote Summary</h2>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="w-full mb-4 rounded-md border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder="Notes"
+            />
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Weight:</span>
@@ -579,7 +644,7 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
               </div>
               {formData.moveType !== 'PTT' && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Fuel Surcharge ({formData.fuelPercent}%):</span>
+                  <span className="text-gray-600">Fuel Surcharge:</span>
                   <span className="font-medium">${quoteResult.fuelSurcharge.toFixed(2)}</span>
                 </div>
               )}
@@ -626,14 +691,14 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
                     return (
                       <div key={accessory} className="flex justify-between pl-4">
                         <span className="text-gray-600">
-                          {accessory}
+                          {accessoryLabel(accessory)}
                           {accessory === "Empty Pallet" && ` (${formData.accessoryQuantities[accessory] || 0} × $${accessoryCharges[accessory]})`}
                           {accessory === "In/Out Charge" && ` (${formData.accessoryQuantities[accessory] || 0} × $${accessoryCharges[accessory]})`}
                           {accessory === "Volume Charge Per Pallet" && ` (${formData.accessoryQuantities[accessory] || 0} pallets × $${accessoryCharges[accessory]})`}
                           {accessory === "Inside Delivery | per 100Lbs" && ` (${formData.accessoryQuantities[accessory] || 0}lbs = $${calculateInsideDeliveryCharge(formData.accessoryQuantities[accessory] || 0)})`}
                           {accessory === "THC + Processing Fee per $100 Covered" && ` ($${formData.accessoryQuantities[accessory] || 0} → $${calculateTHCCharge(formData.accessoryQuantities[accessory] || 0)})`}
                           {accessory === "Storage Charge $10/Pallet/Per Day" && ` (${formData.accessoryQuantities[accessory] || 0} pallets × ${formData.storageDays[accessory] || 0} days × $${accessoryCharges[accessory]})`}
-                          {accessory === "Detention $60/Hour" && ` (${formData.accessoryQuantities[accessory] || 0} minutes × $1)`}
+                          {accessory === "Detention $60/Hour" && ` (${formData.accessoryQuantities[accessory] || 0} minutes × $${(accessoryCharges[DETENTION] / 60).toFixed(2)})`}
                         </span>
                         <span className="font-medium">
                           ${(accessory === "Empty Pallet" || accessory === "In/Out Charge" || accessory === "Volume Charge Per Pallet"
@@ -645,7 +710,7 @@ export default function Quotes({ title = "Quotes", rateMultiplier = 1 }) {
                             : accessory === "Storage Charge $10/Pallet/Per Day"
                             ? (formData.accessoryQuantities[accessory] || 0) * (formData.storageDays[accessory] || 0) * accessoryCharges[accessory]
                             : accessory === "Detention $60/Hour"
-                            ? (formData.accessoryQuantities[accessory] || 0) * 1
+                            ? (formData.accessoryQuantities[accessory] || 0) * accessoryCharges[DETENTION] / 60
                             : accessoryCharges[accessory]
                           ).toFixed(2)}
                         </span>
