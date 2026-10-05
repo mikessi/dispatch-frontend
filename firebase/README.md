@@ -1,7 +1,17 @@
-# Firebase setup for Rate Settings
+# Firebase setup
 
-Rates are stored in one Firestore document (`settings/rates`). Anyone can read it;
-only the admin email(s) in `firestore.rules` can save.
+What's stored in Firestore:
+
+| Collection  | What                                             | Who can read | Who can write |
+|-------------|--------------------------------------------------|--------------|---------------|
+| `settings`  | `settings/rates` — the standard rates            | anyone       | admins        |
+| `customers` | business details, contacts, custom rate overrides | admins       | admins        |
+| `addresses` | pickup/delivery locations                        | admins       | admins        |
+| `jobs`      | shipments: customer, from/to, pro #, pieces…     | admins       | admins        |
+| `invoices`  | invoices made from jobs, with frozen amounts     | admins       | admins        |
+
+Admins are the email(s) listed in `firestore.rules`. Whenever that file changes
+(e.g. a new collection is added), re-publish it: Firestore Database → Rules → paste → Publish.
 
 1. **Create a project** at https://console.firebase.google.com (Google Analytics not needed).
 2. **Add a web app**: Project settings → General → Your apps → `</>`. Copy the config values

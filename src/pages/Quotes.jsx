@@ -1,7 +1,10 @@
-import { useState, useEffect } from "react";
-import { DEFAULT_FUEL_PERCENT, calculateRate, calculateFuel, calculateTransferRate, calculatePTTRate, calculateExportAndTransferRate } from "../utils/rateCalculator";
+import { useState, useEffect, useMemo } from "react";
+import { DEFAULT_FUEL_PERCENT, EMPTY_QUOTE, calculateQuote } from "../utils/rateCalculator";
 import { useRates } from "../context/RatesContext";
+import { useCustomers } from "../context/DataContext";
+import { customerRates, countRateOverrides } from "../utils/customerRates";
 import CityZoneSearch from "../components/CityZoneSearch";
+import { inputBase, inputClass, smallInputBase, labelClass, checkboxClass } from "../components/ui";
 
 const DETENTION = "Detention $60/Hour";
 const STORAGE = "Storage Charge $10/Pallet/Per Day";
@@ -9,7 +12,13 @@ const STORAGE = "Storage Charge $10/Pallet/Per Day";
 const MARKUP_OPTIONS = [5, 10, 15, 20, 25];
 
 export default function Quotes() {
-  const { rates } = useRates();
+  const { rates: standardRates } = useRates();
+  const customers = useCustomers();
+  const [customerId, setCustomerId] = useState('');
+  const customer = customers.byId(customerId);
+  // Standard rates, with the selected customer's custom rates on top
+  const rates = useMemo(() => customerRates(standardRates, customer), [standardRates, customer]);
+  const customRateCount = countRateOverrides(customer?.rateOverrides);
   const { accessoryCharges } = rates;
 
   // Keep the dollar amounts baked into these names in sync with the saved prices
@@ -164,83 +173,26 @@ export default function Quotes() {
   const markupApplies = formData.moveType === 'Import/Export' || formData.moveType === 'Export + Transfer';
 
   useEffect(() => {
-    if (formData.weight) {
-      const weight = parseFloat(formData.weight);
-      if (isNaN(weight)) return;
+    const weight = parseFloat(formData.weight);
+    if (formData.weight && isNaN(weight)) return;
 
-      let result;
-      if (formData.moveType === 'Transfer') {
-        result = calculateTransferRate(rates, weight, formData.weightUnit, formData.fuelPercent);
-        setQuoteResult(prev => ({
-          ...prev,
-          baseRate: result.rate,
-          fuelSurcharge: result.fuel,
-          toll: 0,
-          total: result.rate + result.fuel + prev.accessoryTotal,
-          exportRate: 0,
-          exportFuel: 0,
-          exportToll: 0,
-          transferRate: result.rate,
-          transferFuel: result.fuel
-        }));
-      } else if (formData.moveType === 'PTT') {
-        result = calculatePTTRate(rates, weight, formData.weightUnit);
-        setQuoteResult(prev => ({
-          ...prev,
-          baseRate: result.rate,
-          fuelSurcharge: 0,
-          toll: 0,
-          total: result.rate + prev.accessoryTotal,
-          exportRate: 0,
-          exportFuel: 0,
-          exportToll: 0,
-          transferRate: 0,
-          transferFuel: 0
-        }));
-      } else if (formData.moveType === 'Export + Transfer') {
-        const exportResult = calculateRate(rates, formData.transportMode, formData.zone, weight, formData.weightUnit, formData.fuelPercent, rateMultiplier);
-        const transferResult = calculateTransferRate(rates, weight, formData.weightUnit, formData.fuelPercent);
-        setQuoteResult(prev => ({
-          ...prev,
-          baseRate: exportResult.rate + transferResult.rate,
-          fuelSurcharge: exportResult.fuel + transferResult.fuel,
-          toll: exportResult.toll,
-          total: exportResult.rate + exportResult.fuel + exportResult.toll + transferResult.rate + transferResult.fuel + prev.accessoryTotal,
-          exportRate: exportResult.rate,
-          exportFuel: exportResult.fuel,
-          exportToll: exportResult.toll,
-          transferRate: transferResult.rate,
-          transferFuel: transferResult.fuel
-        }));
-      } else {
-        result = calculateRate(rates, formData.transportMode, formData.zone, weight, formData.weightUnit, formData.fuelPercent, rateMultiplier);
-        setQuoteResult(prev => ({
-          ...prev,
-          baseRate: result.rate,
-          fuelSurcharge: result.fuel,
-          toll: result.toll,
-          total: result.rate + result.fuel + result.toll + prev.accessoryTotal,
-          exportRate: result.rate,
-          exportFuel: result.fuel,
-          exportToll: result.toll,
-          transferRate: 0,
-          transferFuel: 0
-        }));
-      }
-    } else {
-      setQuoteResult(prev => ({
-        ...prev,
-        baseRate: 0,
-        fuelSurcharge: 0,
-        toll: 0,
-        total: prev.accessoryTotal,
-        exportRate: 0,
-        exportFuel: 0,
-        exportToll: 0,
-        transferRate: 0,
-        transferFuel: 0
-      }));
-    }
+    const quote = formData.weight
+      ? calculateQuote(rates, {
+          moveType: formData.moveType,
+          transportMode: formData.transportMode,
+          zone: formData.zone,
+          weight,
+          weightUnit: formData.weightUnit,
+          fuelPercent: formData.fuelPercent,
+          rateMultiplier
+        })
+      : EMPTY_QUOTE;
+
+    setQuoteResult(prev => ({
+      ...prev,
+      ...quote,
+      total: quote.baseRate + quote.fuelSurcharge + quote.toll + prev.accessoryTotal
+    }));
   }, [formData, rateMultiplier, rates]);
 
   useEffect(() => {
@@ -300,14 +252,39 @@ export default function Quotes() {
 
   return (
     <div className="p-1">
-      <h1 className="text-2xl font-bold mb-2">Quotes</h1>
-      <div className="bg-white shadow rounded-lg p-2">
+      <h1 className="text-2xl font-bold mb-4">Quotes</h1>
+      <div className="bg-white border border-gray-200 shadow-sm rounded-xl p-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
+            {customers.items.length > 0 && (
+              <div>
+                <label className={labelClass}>
+                  Customer
+                </label>
+                <select
+                  value={customerId}
+                  onChange={(e) => setCustomerId(e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="">No customer (standard rates)</option>
+                  {customers.items.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                {customer && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {customRateCount > 0
+                      ? `Using ${customRateCount} custom rate${customRateCount === 1 ? '' : 's'} for ${customer.name}.`
+                      : `${customer.name} uses standard rates.`}
+                  </p>
+                )}
+              </div>
+            )}
+
             <CityZoneSearch onSelect={(zone) => setFormData(prev => ({ ...prev, zone }))} />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={labelClass}>
                 Weight
               </label>
               <div className="flex">
@@ -316,14 +293,14 @@ export default function Quotes() {
                   name="weight"
                   value={formData.weight}
                   onChange={handleChange}
-                  className="flex-1 rounded-l-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className={`${inputBase} flex-1 min-w-0 rounded-r-none`}
                   placeholder="Enter weight"
                 />
                 <select
                   name="weightUnit"
                   value={formData.weightUnit}
                   onChange={handleChange}
-                  className="rounded-r-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className={`${inputBase} rounded-l-none border-l-0`}
                 >
                   <option value="lbs">lbs</option>
                   <option value="kg">kg</option>
@@ -332,14 +309,14 @@ export default function Quotes() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={labelClass}>
                 Move Type
               </label>
               <select
                 name="moveType"
                 value={formData.moveType}
                 onChange={handleChange}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className={inputClass}
               >
                 <option value="Import/Export">Import/Export</option>
                 <option value="Transfer">Transfer</option>
@@ -349,14 +326,14 @@ export default function Quotes() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={labelClass}>
                 Zone
               </label>
               <select
                 name="zone"
                 value={formData.zone}
                 onChange={handleChange}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className={inputClass}
                 disabled={formData.moveType === 'Transfer' || formData.moveType === 'PTT'}
               >
                 <option value="A">A</option>
@@ -369,14 +346,14 @@ export default function Quotes() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={labelClass}>
                 Fuel Surcharge
               </label>
               <select
                 name="fuelPercent"
                 value={formData.fuelPercent}
                 onChange={handleChange}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className={inputClass}
                 disabled={formData.moveType === 'PTT'}
               >
                 {Array.from({ length: 31 }, (_, i) => 20 + i).map(percent => (
@@ -386,7 +363,7 @@ export default function Quotes() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={labelClass}>
                 Markup
               </label>
               <div className="flex items-center gap-3">
@@ -397,7 +374,7 @@ export default function Quotes() {
                     checked={formData.markupEnabled}
                     onChange={handleChange}
                     disabled={!markupApplies}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className={checkboxClass}
                   />
                   Apply markup
                 </label>
@@ -406,7 +383,7 @@ export default function Quotes() {
                   value={formData.markupPercent}
                   onChange={handleChange}
                   disabled={!markupApplies || !formData.markupEnabled}
-                  className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
+                  className={`${inputBase} flex-1`}
                 >
                   {MARKUP_OPTIONS.map(percent => (
                     <option key={percent} value={percent}>{percent}%</option>
@@ -419,7 +396,7 @@ export default function Quotes() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={labelClass}>
                 Transport Mode
               </label>
               <div className="flex space-x-4">
@@ -430,7 +407,7 @@ export default function Quotes() {
                     value="Air"
                     checked={formData.transportMode === 'Air'}
                     onChange={handleChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    className="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-300"
                   />
                   <span className="ml-2 text-sm text-gray-700">Air</span>
                 </label>
@@ -441,7 +418,7 @@ export default function Quotes() {
                     value="Ocean"
                     checked={formData.transportMode === 'Ocean'}
                     onChange={handleChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    className="h-4 w-4 border-gray-300 text-purple-600 focus:ring-purple-300"
                   />
                   <span className="ml-2 text-sm text-gray-700">Ocean</span>
                 </label>
@@ -449,10 +426,10 @@ export default function Quotes() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className={labelClass}>
                 Accessory Charges
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-96 overflow-y-auto p-2 border rounded-md">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-96 overflow-y-auto p-2 border border-gray-300 rounded-lg">
                 {Object.entries(accessoryCharges).map(([name, price]) => (
                   <div key={name} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
                     <label className="flex items-center space-x-2 flex-1">
@@ -460,7 +437,7 @@ export default function Quotes() {
                         type="checkbox"
                         checked={formData.selectedAccessories.includes(name)}
                         onChange={(e) => handleAccessoryChange(name, e.target.checked)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className={checkboxClass}
                       />
                       <span className="text-sm">
                         {accessoryLabel(name)} {name !== "Empty Pallet" && name !== "Inside Delivery | per 100Lbs" && name !== "THC + Processing Fee per $100 Covered" && name !== "In/Out Charge" && name !== "Storage Charge $10/Pallet/Per Day" && name !== "Detention $60/Hour" && name !== "Volume Charge Per Pallet" && `($${price})`}
@@ -472,7 +449,7 @@ export default function Quotes() {
                           type="text"
                           value={formData.accessoryQuantities[name] || ''}
                           onChange={(e) => handleQuantityChange(name, e.target.value)}
-                          className="w-16 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                          className={`${smallInputBase} w-16`}
                           placeholder="Qty"
                         />
                         <span className="text-sm text-gray-500">× ${price}</span>
@@ -484,7 +461,7 @@ export default function Quotes() {
                           type="text"
                           value={formData.accessoryQuantities[name] || ''}
                           onChange={(e) => handleQuantityChange(name, e.target.value)}
-                          className="w-16 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                          className={`${smallInputBase} w-16`}
                           placeholder="Qty"
                         />
                         <span className="text-sm text-gray-500">× ${price}</span>
@@ -496,7 +473,7 @@ export default function Quotes() {
                           type="text"
                           value={formData.accessoryQuantities[name] || ''}
                           onChange={(e) => handleQuantityChange(name, e.target.value)}
-                          className="w-16 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                          className={`${smallInputBase} w-16`}
                           placeholder="Pallets"
                         />
                         <span className="text-sm text-gray-500">× ${price}</span>
@@ -508,14 +485,14 @@ export default function Quotes() {
                           type="text"
                           value={formData.accessoryQuantities[name] || ''}
                           onChange={(e) => handleQuantityChange(name, e.target.value)}
-                          className="w-16 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                          className={`${smallInputBase} w-16`}
                           placeholder="Pallets"
                         />
                         <input
                           type="text"
                           value={formData.storageDays[name] || ''}
                           onChange={(e) => handleStorageDaysChange(name, e.target.value)}
-                          className="w-16 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                          className={`${smallInputBase} w-16`}
                           placeholder="Days"
                         />
                         <span className="text-sm text-gray-500">× ${price}/day</span>
@@ -527,7 +504,7 @@ export default function Quotes() {
                           type="text"
                           value={formData.accessoryQuantities[name] || ''}
                           onChange={(e) => handleQuantityChange(name, e.target.value)}
-                          className="w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                          className={`${smallInputBase} w-24`}
                           placeholder="Weight (lbs)"
                         />
                         <span className="text-sm text-gray-500">× $25/100lbs</span>
@@ -539,7 +516,7 @@ export default function Quotes() {
                           type="text"
                           value={formData.accessoryQuantities[name] || ''}
                           onChange={(e) => handleQuantityChange(name, e.target.value)}
-                          className="w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                          className={`${smallInputBase} w-24`}
                           placeholder="Amount ($)"
                         />
                         <span className="text-sm text-gray-500">× $15/100</span>
@@ -551,7 +528,7 @@ export default function Quotes() {
                           type="text"
                           value={formData.accessoryQuantities[name] || ''}
                           onChange={(e) => handleQuantityChange(name, e.target.value)}
-                          className="w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                          className={`${smallInputBase} w-24`}
                           placeholder="Minutes"
                         />
                         <span className="text-sm text-gray-500">× $1/min</span>
@@ -568,7 +545,7 @@ export default function Quotes() {
                         type="checkbox"
                         checked={formData.selectedAccessories.includes("Custom")}
                         onChange={(e) => handleAccessoryChange("Custom", e.target.checked)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className={checkboxClass}
                       />
                       <span className="text-sm font-medium">Custom Charges</span>
                     </label>
@@ -588,14 +565,14 @@ export default function Quotes() {
                         type="text"
                         value={charge.description}
                         onChange={(e) => handleCustomChargeChange(index, 'description', e.target.value)}
-                        className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                        className={`${smallInputBase} flex-1 min-w-0`}
                         placeholder="Description"
                       />
                       <input
                         type="text"
                         value={charge.price}
                         onChange={(e) => handleCustomChargeChange(index, 'price', e.target.value)}
-                        className="w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                        className={`${smallInputBase} w-24`}
                         placeholder="Price"
                       />
                       <button
@@ -611,16 +588,22 @@ export default function Quotes() {
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h2 className="text-lg font-medium text-gray-900 mb-2">Quote Summary</h2>
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+            <h2 className="text-base font-semibold text-gray-900 border-b border-gray-200 pb-3 mb-4">Quote Summary</h2>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full mb-4 rounded-md border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500"
+              className={`${inputClass} mb-4 bg-white`}
               placeholder="Notes"
             />
             <div className="space-y-2">
+              {customer && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Customer:</span>
+                  <span className="font-medium">{customer.name}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-gray-600">Weight:</span>
                 <span className="font-medium">{formData.weight} {formData.weightUnit}</span>

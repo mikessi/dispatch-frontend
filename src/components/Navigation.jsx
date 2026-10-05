@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   DocumentTextIcon,
   TruckIcon,
@@ -10,20 +11,22 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function Navigation() {
+  const { user, signOut } = useAuth();
   // Only Quotes is enabled for now; uncomment items to re-enable pages.
   const navItems = [
     { path: '/quotes', label: 'Quotes', icon: DocumentTextIcon },
+    { path: '/jobs', label: 'Jobs', icon: ClipboardDocumentListIcon },
+    { path: '/invoices', label: 'Invoices', icon: DocumentDuplicateIcon },
+    { path: '/customers', label: 'Customers', icon: UserGroupIcon },
+    { path: '/addresses', label: 'Addresses', icon: MapPinIcon },
     { path: '/rate-settings', label: 'Rate Settings', icon: Cog6ToothIcon },
     // { path: '/dispatch', label: 'Dispatch Board', icon: ClipboardDocumentListIcon },
     // { path: '/drivers', label: 'Drivers', icon: UserGroupIcon },
-    // { path: '/customers', label: 'Customers', icon: UserGroupIcon },
     // { path: '/trucks', label: 'Trucks', icon: TruckIcon },
-    // { path: '/addresses', label: 'Addresses', icon: MapPinIcon },
-    // { path: '/invoices', label: 'Invoices', icon: DocumentDuplicateIcon },
   ];
 
   return (
-    <nav className="fixed left-0 top-0 h-screen w-64 bg-white shadow-lg z-50 flex flex-col">
+    <nav className="fixed left-0 top-0 h-screen w-64 bg-white shadow-lg z-50 flex flex-col print:hidden">
       <div className="p-6">
         <div className="gradient-primary text-white px-6 py-3 rounded-xl shadow-lg">
           <span className="text-2xl font-bold tracking-tight">Dispatch</span>
@@ -57,6 +60,13 @@ export default function Navigation() {
           );
         })}
       </div>
+      {user && (
+        <div className="p-4 border-t text-sm">
+          <p className="text-gray-500">Signed in as</p>
+          <p className="font-medium text-gray-800 truncate" title={user.email}>{user.email}</p>
+          <button onClick={signOut} className="mt-1 text-purple-600 hover:underline">Sign out</button>
+        </div>
+      )}
     </nav>
   );
 } 
