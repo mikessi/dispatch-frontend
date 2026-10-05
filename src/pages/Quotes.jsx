@@ -387,7 +387,7 @@ export default function Quotes() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Markup
+                Markup <span className="ml-2 font-semibold text-red-600">OEC OCEAN ONLY</span>
               </label>
               <div className="flex items-center gap-3">
                 <label className="inline-flex items-center gap-2 text-sm">
@@ -612,14 +612,7 @@ export default function Quotes() {
           </div>
 
           <div className="bg-gray-50 rounded-lg p-4">
-            <h2 className="text-lg font-medium text-gray-900 mb-2">Quote Summary</h2>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              className="w-full mb-4 rounded-md border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500"
-              placeholder="Notes"
-            />
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Quote Summary</h2>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Weight:</span>
@@ -742,6 +735,13 @@ export default function Quotes() {
                 <span className="text-blue-600">${quoteResult.total.toFixed(2)}</span>
               </div>
             </div>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="w-full mt-4 rounded-md border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder="Notes"
+            />
           </div>
         </div>
       </div>
