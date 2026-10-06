@@ -7,6 +7,7 @@ import CustomerDetail from "./pages/CustomerDetail";
 import Addresses from "./pages/Addresses";
 import Jobs from "./pages/Jobs";
 import Invoices from "./pages/Invoices";
+import Login from "./pages/Login";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import { AuthProvider } from "./context/AuthContext";
 import { DataProvider } from "./context/DataContext";
@@ -28,6 +29,7 @@ export default function App() {
               <main className="ml-64 w-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in print:ml-0 print:p-0">
                 <Routes>
                   <Route path="/quotes" element={<Quotes />} />
+                  <Route path="/login" element={<Login />} />
                   <Route path="/jobs" element={<Jobs />} />
                   <Route path="/invoices" element={<Invoices />} />
                   <Route path="/invoices/:id" element={<InvoiceDetail />} />

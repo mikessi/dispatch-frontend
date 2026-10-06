@@ -8,10 +8,14 @@ service cloud.firestore {
         && request.auth.token.email in ['REPLACE_WITH_ADMIN_EMAIL'];
     }
 
-    // Rate settings: anyone can read (the quote page needs them), admins write
-    match /settings/{docId} {
+    // The public Quotes page needs the rates, so anyone can read them; admins write
+    match /settings/rates {
       allow read: if true;
       allow write: if isAdmin();
+    }
+    // Everything else in settings (e.g. company details for invoices) is admins only
+    match /settings/{docId} {
+      allow read, write: if isAdmin();
     }
 
     // Business records are private: admins only

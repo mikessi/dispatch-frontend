@@ -11,10 +11,12 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function Navigation() {
-  const { user, signOut } = useAuth();
-  // Only Quotes is enabled for now; uncomment items to re-enable pages.
-  const navItems = [
+  const { user, available, signOut } = useAuth();
+  // Quotes is public; everything else is for signed-in staff
+  const publicItems = [
     { path: '/quotes', label: 'Quotes', icon: DocumentTextIcon },
+  ];
+  const staffItems = [
     { path: '/jobs', label: 'Jobs', icon: ClipboardDocumentListIcon },
     { path: '/invoices', label: 'Invoices', icon: DocumentDuplicateIcon },
     { path: '/customers', label: 'Customers', icon: UserGroupIcon },
@@ -24,6 +26,7 @@ export default function Navigation() {
     // { path: '/drivers', label: 'Drivers', icon: UserGroupIcon },
     // { path: '/trucks', label: 'Trucks', icon: TruckIcon },
   ];
+  const navItems = user ? [...publicItems, ...staffItems] : publicItems;
 
   return (
     <nav className="fixed left-0 top-0 h-screen w-64 bg-white shadow-lg z-50 flex flex-col print:hidden">
@@ -60,13 +63,17 @@ export default function Navigation() {
           );
         })}
       </div>
-      {user && (
-        <div className="p-4 border-t text-sm">
-          <p className="text-gray-500">Signed in as</p>
-          <p className="font-medium text-gray-800 truncate" title={user.email}>{user.email}</p>
-          <button onClick={signOut} className="mt-1 text-purple-600 hover:underline">Sign out</button>
-        </div>
-      )}
+      <div className="p-4 border-t text-sm">
+        {user ? (
+          <>
+            <p className="text-gray-500">Signed in as</p>
+            <p className="font-medium text-gray-800 truncate" title={user.email}>{user.email}</p>
+            <button onClick={signOut} className="mt-1 text-purple-600 hover:underline">Sign out</button>
+          </>
+        ) : (
+          available && <NavLink to="/login" className="text-purple-600 hover:underline">Staff sign in</NavLink>
+        )}
+      </div>
     </nav>
   );
 } 

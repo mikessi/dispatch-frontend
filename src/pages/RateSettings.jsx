@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import SignInForm from "../components/SignInForm";
+import RequireSignIn from "../components/RequireSignIn";
 import { Card, Message, smallInputBase, labelClass, primaryButtonClass, secondaryButtonClass } from "../components/ui";
-import { useAuth } from "../context/AuthContext";
 import { useRates } from "../context/RatesContext";
 import { DEFAULT_RATES } from "../utils/defaultRates";
 
@@ -63,10 +62,9 @@ function NumberCell({ value, onChange, disabled, label }) {
   );
 }
 
-export default function RateSettings() {
+function RateSettingsEditor() {
   const { rates, status, updatedAt, saveRates } = useRates();
   const [draft, setDraft] = useState(() => toDraft(rates));
-  const { user, available: authAvailable, signOut } = useAuth();
   const [message, setMessage] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -76,7 +74,8 @@ export default function RateSettings() {
   }, [rates]);
 
   const isDirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(toDraft(rates)), [draft, rates]);
-  const canEdit = Boolean(user);
+  // The page is only shown to signed-in staff, who can all edit
+  const canEdit = true;
 
   const setAt = (path, value) => {
     setDraft((prev) => {
@@ -121,22 +120,6 @@ export default function RateSettings() {
         <h1 className="text-2xl font-bold mb-1">Rate Settings</h1>
         <p className="text-sm text-gray-600">{statusText}</p>
       </div>
-
-      {authAvailable && (
-        <Card>
-          {user ? (
-            <div className="flex items-center justify-between text-sm">
-              <span>Signed in as <strong>{user.email}</strong> — you can edit and save.</span>
-              <button onClick={signOut} className="text-purple-600 hover:underline">Sign out</button>
-            </div>
-          ) : (
-            <>
-              <p className="text-sm text-gray-600 mb-2">Sign in to edit rates. Anyone can view them.</p>
-              <SignInForm />
-            </>
-          )}
-        </Card>
-      )}
 
       <Message message={message} />
 
@@ -245,5 +228,13 @@ export default function RateSettings() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function RateSettings() {
+  return (
+    <RequireSignIn title="Rate Settings">
+      <RateSettingsEditor />
+    </RequireSignIn>
   );
 }

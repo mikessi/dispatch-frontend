@@ -5,6 +5,7 @@ What's stored in Firestore:
 | Collection  | What                                             | Who can read | Who can write |
 |-------------|--------------------------------------------------|--------------|---------------|
 | `settings`  | `settings/rates` — the standard rates            | anyone       | admins        |
+| `settings`  | `settings/company` — your details for invoices   | admins       | admins        |
 | `customers` | business details, contacts, custom rate overrides | admins       | admins        |
 | `addresses` | pickup/delivery locations                        | admins       | admins        |
 | `jobs`      | shipments: customer, from/to, pro #, pieces…     | admins       | admins        |
