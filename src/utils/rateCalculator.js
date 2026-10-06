@@ -113,7 +113,46 @@ const calculateExportAndTransferRate = (priceList, transport, zone, weight, unit
   };
 };
 
+const EMPTY_QUOTE = {
+  baseRate: 0, fuelSurcharge: 0, toll: 0,
+  exportRate: 0, exportFuel: 0, exportToll: 0,
+  transferRate: 0, transferFuel: 0
+};
+
+// The full price breakdown for one shipment. Used by the Quotes page and by
+// invoices so both always price the same way.
+const calculateQuote = (priceList, { moveType, transportMode, zone, weight, weightUnit, fuelPercent = DEFAULT_FUEL_PERCENT, rateMultiplier = 1 }) => {
+  if (typeof weight !== 'number' || isNaN(weight)) return EMPTY_QUOTE;
+
+  if (moveType === 'Transfer') {
+    const transfer = calculateTransferRate(priceList, weight, weightUnit, fuelPercent);
+    return { ...EMPTY_QUOTE, baseRate: transfer.rate, fuelSurcharge: transfer.fuel, transferRate: transfer.rate, transferFuel: transfer.fuel };
+  }
+  if (moveType === 'PTT') {
+    return { ...EMPTY_QUOTE, baseRate: calculatePTTRate(priceList, weight, weightUnit).rate };
+  }
+
+  const zoneResult = calculateRate(priceList, transportMode, zone, weight, weightUnit, fuelPercent, rateMultiplier);
+  if (!zoneResult) return EMPTY_QUOTE;
+  const exportPart = { exportRate: zoneResult.rate, exportFuel: zoneResult.fuel, exportToll: zoneResult.toll };
+
+  if (moveType === 'Export + Transfer') {
+    const transfer = calculateTransferRate(priceList, weight, weightUnit, fuelPercent);
+    return {
+      ...exportPart,
+      baseRate: zoneResult.rate + transfer.rate,
+      fuelSurcharge: zoneResult.fuel + transfer.fuel,
+      toll: zoneResult.toll,
+      transferRate: transfer.rate,
+      transferFuel: transfer.fuel
+    };
+  }
+  return { ...EMPTY_QUOTE, ...exportPart, baseRate: zoneResult.rate, fuelSurcharge: zoneResult.fuel, toll: zoneResult.toll };
+};
+
 export {
+  EMPTY_QUOTE,
+  calculateQuote,
   DEFAULT_FUEL_PERCENT,
   calculateRate,
   calculateFuel,

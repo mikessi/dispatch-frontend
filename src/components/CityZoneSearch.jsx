@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { cityZones } from "../utils/cityZones";
+import { inputClass, labelClass } from "./ui";
 
 const MAX_SUGGESTIONS = 8;
 
@@ -55,7 +56,7 @@ export default function CityZoneSearch({ onSelect }) {
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className={labelClass}>
         City Zone Lookup
       </label>
       <div className="flex items-center gap-2">
@@ -67,7 +68,7 @@ export default function CityZoneSearch({ onSelect }) {
             onKeyDown={handleKeyDown}
             onFocus={() => setIsOpen(true)}
             onBlur={() => setIsOpen(false)}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={inputClass}
             placeholder="Search city name"
             autoComplete="off"
           />
@@ -97,7 +98,7 @@ export default function CityZoneSearch({ onSelect }) {
             </ul>
           )}
         </div>
-        <div className="w-24 text-center rounded-md border border-gray-200 bg-gray-50 py-2 text-sm">
+        <div className="w-24 text-center rounded-lg border border-gray-300 bg-white py-2 text-sm">
           {selected ? (
             <span className="font-semibold text-purple-700">Zone {selected.zone}</span>
           ) : (

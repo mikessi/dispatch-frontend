@@ -114,3 +114,16 @@ button:active {
 .animate-fade-in {
   animation: fadeIn 0.5s ease-out;
 }
+
+/* Printing (invoices): plain white page, no screen decoration */
+@media print {
+  body {
+    background: white;
+  }
+  .animate-fade-in {
+    animation: none;
+  }
+  @page {
+    margin: 0.6in;
+  }
+}

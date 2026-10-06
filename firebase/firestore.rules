@@ -2,12 +2,34 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Rate settings: anyone can read (the quote pages need them),
-    // only the listed admin accounts can change them.
-    match /settings/{docId} {
-      allow read: if true;
-      allow write: if request.auth != null
+    // Only these accounts can sign in and change data
+    function isAdmin() {
+      return request.auth != null
         && request.auth.token.email in ['REPLACE_WITH_ADMIN_EMAIL'];
+    }
+
+    // The public Quotes page needs the rates, so anyone can read them; admins write
+    match /settings/rates {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    // Everything else in settings (e.g. company details for invoices) is admins only
+    match /settings/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Business records are private: admins only
+    match /customers/{docId} {
+      allow read, write: if isAdmin();
+    }
+    match /addresses/{docId} {
+      allow read, write: if isAdmin();
+    }
+    match /jobs/{docId} {
+      allow read, write: if isAdmin();
+    }
+    match /invoices/{docId} {
+      allow read, write: if isAdmin();
     }
 
     // Everything else is locked
