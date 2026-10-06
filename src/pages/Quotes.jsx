@@ -387,7 +387,7 @@ export default function Quotes() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Markup <span className="ml-2 font-semibold text-red-600">OEC OCEAN ONLY</span>
+                Markup <span className="ml-2 font-semibold text-red-600">EXCLUDE OEC OCEAN</span>
               </label>
               <div className="flex items-center gap-3">
                 <label className="inline-flex items-center gap-2 text-sm">
