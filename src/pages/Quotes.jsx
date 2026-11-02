@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { DEFAULT_FUEL_PERCENT, EMPTY_QUOTE, calculateQuote } from "../utils/rateCalculator";
 import { useRates } from "../context/RatesContext";
 import { useCustomers } from "../context/DataContext";
@@ -44,6 +45,8 @@ export default function Quotes() {
   });
 
   const [notes, setNotes] = useState('');
+  // Export + Transfer breakdown in the summary starts collapsed
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   const [quoteResult, setQuoteResult] = useState({
     baseRate: 0,
@@ -633,8 +636,17 @@ export default function Quotes() {
               {formData.moveType === 'Export + Transfer' && (
                 <>
                   <div className="border-t border-gray-200 my-2"></div>
-                  <div className="text-sm text-gray-500 mb-2">Breakdown:</div>
-                  <div className="pl-4 space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowBreakdown((open) => !open)}
+                    aria-expanded={showBreakdown}
+                    aria-controls="quote-breakdown"
+                    className="flex w-full items-center gap-1 text-sm text-gray-500 hover:text-gray-800 print:hidden"
+                  >
+                    <ChevronRightIcon className={`h-4 w-4 transition-transform ${showBreakdown ? 'rotate-90' : ''}`} />
+                    {showBreakdown ? 'Hide breakdown' : 'Show breakdown'}
+                  </button>
+                  <div id="quote-breakdown" className={`pl-4 space-y-2 ${showBreakdown ? '' : 'hidden print:block'}`}>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Export Rate:</span>
                       <span className="font-medium">${quoteResult.exportRate.toFixed(2)}</span>

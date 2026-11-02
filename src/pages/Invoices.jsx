@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import DataTable from "../components/DataTable";
 import RequireSignIn from "../components/RequireSignIn";
 import StatusBadge from "../components/StatusBadge";
 import {
@@ -108,6 +109,50 @@ function InvoiceList() {
   const visibleUnpaid = visible.filter((invoice) => statusOf(invoice) === 'unpaid');
   const countFor = (key) => invoices.items.filter((invoice) => key === 'all' || statusOf(invoice) === key).length;
 
+  const columns = [
+    { key: 'number', label: 'Invoice #', width: 110, render: (invoice) => <span className="font-medium text-purple-700">{invoice.invoiceNumber}</span> },
+    { key: 'date', label: 'Date', width: 110, render: (invoice) => formatDate(invoice.date) },
+    { key: 'customer', label: 'Customer', width: 240, render: (invoice) => customerName(invoice) },
+    { key: 'pro', label: 'Pro #', width: 120, render: (invoice) => invoice.proNumber },
+    { key: 'reference', label: 'Ref #', width: 120, render: (invoice) => invoice.referenceNumber },
+    { key: 'moveType', label: 'Move type', width: 150, render: (invoice) => invoice.moveType },
+    {
+      key: 'status', label: 'Status', width: 210,
+      render: (invoice) => (
+        <>
+          <StatusBadge status={statusOf(invoice)} />
+          {invoice.paidDate && <span className="ml-2 text-xs text-gray-500">{formatDate(invoice.paidDate)}</span>}
+          {paymentSummary(invoice) && <p className="text-xs text-gray-500">{paymentSummary(invoice)}</p>}
+          {statusOf(invoice) === 'unpaid' && invoice.dueDate && (
+            <p className={`text-xs ${invoice.dueDate < todayISO() ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+              {invoice.dueDate < todayISO() ? 'Overdue — was due' : 'Due'} {formatDate(invoice.dueDate)}
+            </p>
+          )}
+        </>
+      ),
+    },
+    { key: 'total', label: 'Total', width: 120, align: 'right', render: (invoice) => <span className="font-medium">{money(invoice.total)}</span> },
+  ];
+
+  const totalsFooter = (
+    <>
+      <tr className="border-t border-gray-200">
+        <td colSpan={columns.length - 1} className="py-2 px-2 text-right text-gray-600">
+          {visible.length} invoice{visible.length === 1 ? '' : 's'}
+        </td>
+        <td className="py-2 px-2 text-right font-semibold">{money(sum(visible))}</td>
+      </tr>
+      {visibleUnpaid.length > 0 && (
+        <tr>
+          <td colSpan={columns.length - 1} className="pb-2 px-2 text-right text-amber-700">
+            Still unpaid ({visibleUnpaid.length})
+          </td>
+          <td className="pb-2 px-2 text-right font-semibold text-amber-700">{money(sum(visibleUnpaid))}</td>
+        </tr>
+      )}
+    </>
+  );
+
   return (
     <div className="p-1 space-y-4">
       <div className="flex items-center justify-between">
@@ -145,84 +190,34 @@ function InvoiceList() {
         className={inputClass}
       />
 
-      <Card>
-        {invoices.status === 'loading' && <p className="text-sm text-gray-600">Loading invoices…</p>}
-        {invoices.status === 'error' && (
-          <p className="text-sm text-red-600">
-            Couldn’t load invoices. The database rules may not allow it yet — see firebase/README.md.
-          </p>
-        )}
-        {invoices.status === 'ready' && invoices.items.length === 0 && (
-          <p className="text-sm text-gray-600">
-            No invoices yet. Open <Link to="/jobs" className="text-purple-600 hover:underline">Jobs</Link> and
-            click <strong>Invoice</strong> on a job to create one.
-          </p>
-        )}
-        {invoices.status === 'ready' && invoices.items.length > 0 && visible.length === 0 && (
-          <p className="text-sm text-gray-600">No invoices match this search and filter.</p>
-        )}
-        {visible.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs font-semibold uppercase tracking-wide text-gray-600 border-b">
-                  <th className="py-2 pr-4">Invoice #</th>
-                  <th className="py-2 pr-4">Date</th>
-                  <th className="py-2 pr-4">Customer</th>
-                  <th className="py-2 pr-4">Pro #</th>
-                  <th className="py-2 pr-4">Ref #</th>
-                  <th className="py-2 pr-4">Move type</th>
-                  <th className="py-2 pr-4">Status</th>
-                  <th className="py-2 text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((invoice) => (
-                  <tr
-                    key={invoice.id}
-                    onClick={() => navigate(`/invoices/${invoice.id}`)}
-                    className="border-b last:border-0 hover:bg-purple-50/50 cursor-pointer"
-                  >
-                    <td className="py-2 pr-4 font-medium text-purple-700">{invoice.invoiceNumber}</td>
-                    <td className="py-2 pr-4 whitespace-nowrap">{formatDate(invoice.date)}</td>
-                    <td className="py-2 pr-4">{customerName(invoice)}</td>
-                    <td className="py-2 pr-4">{invoice.proNumber}</td>
-                    <td className="py-2 pr-4">{invoice.referenceNumber}</td>
-                    <td className="py-2 pr-4 whitespace-nowrap">{invoice.moveType}</td>
-                    <td className="py-2 pr-4 whitespace-nowrap">
-                      <StatusBadge status={statusOf(invoice)} />
-                      {invoice.paidDate && <span className="ml-2 text-xs text-gray-500">{formatDate(invoice.paidDate)}</span>}
-                      {paymentSummary(invoice) && <p className="text-xs text-gray-500">{paymentSummary(invoice)}</p>}
-                      {statusOf(invoice) === 'unpaid' && invoice.dueDate && (
-                        <p className={`text-xs ${invoice.dueDate < todayISO() ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
-                          {invoice.dueDate < todayISO() ? 'Overdue — was due' : 'Due'} {formatDate(invoice.dueDate)}
-                        </p>
-                      )}
-                    </td>
-                    <td className="py-2 text-right font-medium">{money(invoice.total)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="border-t">
-                  <td colSpan={7} className="py-2 pr-4 text-right text-gray-600">
-                    {visible.length} invoice{visible.length === 1 ? '' : 's'}
-                  </td>
-                  <td className="py-2 text-right font-semibold">{money(sum(visible))}</td>
-                </tr>
-                {visibleUnpaid.length > 0 && (
-                  <tr>
-                    <td colSpan={7} className="pb-2 pr-4 text-right text-amber-700">
-                      Still unpaid ({visibleUnpaid.length})
-                    </td>
-                    <td className="pb-2 text-right font-semibold text-amber-700">{money(sum(visibleUnpaid))}</td>
-                  </tr>
-                )}
-              </tfoot>
-            </table>
-          </div>
-        )}
-      </Card>
+      {visible.length === 0 ? (
+        <Card>
+          {invoices.status === 'loading' && <p className="text-sm text-gray-600">Loading invoices…</p>}
+          {invoices.status === 'error' && (
+            <p className="text-sm text-red-600">
+              Couldn’t load invoices. The database rules may not allow it yet — see firebase/README.md.
+            </p>
+          )}
+          {invoices.status === 'ready' && invoices.items.length === 0 && (
+            <p className="text-sm text-gray-600">
+              No invoices yet. Open <Link to="/jobs" className="text-purple-600 hover:underline">Jobs</Link> and
+              click <strong>Invoice</strong> on a job to create one.
+            </p>
+          )}
+          {invoices.status === 'ready' && invoices.items.length > 0 && visible.length === 0 && (
+            <p className="text-sm text-gray-600">No invoices match this search and filter.</p>
+          )}
+        </Card>
+      ) : (
+        <DataTable
+          storageKey="invoices"
+          columns={columns}
+          rows={visible}
+          onRowClick={(invoice) => navigate(`/invoices/${invoice.id}`)}
+          footer={totalsFooter}
+          maxHeight="calc(100vh - 290px)"
+        />
+      )}
 
       {editingCompany && <CompanyForm onClose={() => setEditingCompany(false)} />}
     </div>

@@ -10,8 +10,10 @@ export const applyRateOverrides = (rates, overrides) => {
   if (!isPlainObject(overrides)) return rates;
   const result = { ...rates };
   for (const [key, value] of Object.entries(overrides)) {
+    // An override for a rate that no longer exists (e.g. a removed accessory charge) is ignored
+    if (!(key in rates)) continue;
     if (isPlainObject(value)) {
-      result[key] = applyRateOverrides(isPlainObject(rates[key]) ? rates[key] : {}, value);
+      if (isPlainObject(rates[key])) result[key] = applyRateOverrides(rates[key], value);
     } else if (typeof value === 'number' && Number.isFinite(value)) {
       result[key] = value;
     }

@@ -31,6 +31,9 @@ service cloud.firestore {
     match /invoices/{docId} {
       allow read, write: if isAdmin();
     }
+    match /trucks/{docId} {
+      allow read, write: if isAdmin();
+    }
 
     // Everything else is locked
     match /{document=**} {

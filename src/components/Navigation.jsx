@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   DocumentTextIcon,
   TruckIcon,
+  CalendarDaysIcon,
   UserGroupIcon,
   MapPinIcon,
   DocumentDuplicateIcon,
@@ -17,14 +18,14 @@ export default function Navigation() {
     { path: '/quotes', label: 'Quotes', icon: DocumentTextIcon },
   ];
   const staffItems = [
+    { path: '/dispatch', label: 'Dispatch Board', icon: CalendarDaysIcon },
     { path: '/jobs', label: 'Jobs', icon: ClipboardDocumentListIcon },
     { path: '/invoices', label: 'Invoices', icon: DocumentDuplicateIcon },
     { path: '/customers', label: 'Customers', icon: UserGroupIcon },
     { path: '/addresses', label: 'Addresses', icon: MapPinIcon },
+    { path: '/trucks', label: 'Trucks', icon: TruckIcon },
     { path: '/rate-settings', label: 'Rate Settings', icon: Cog6ToothIcon },
-    // { path: '/dispatch', label: 'Dispatch Board', icon: ClipboardDocumentListIcon },
     // { path: '/drivers', label: 'Drivers', icon: UserGroupIcon },
-    // { path: '/trucks', label: 'Trucks', icon: TruckIcon },
   ];
   const navItems = user ? [...publicItems, ...staffItems] : publicItems;
 
@@ -68,7 +69,10 @@ export default function Navigation() {
           <>
             <p className="text-gray-500">Signed in as</p>
             <p className="font-medium text-gray-800 truncate" title={user.email}>{user.email}</p>
-            <button onClick={signOut} className="mt-1 text-purple-600 hover:underline">Sign out</button>
+            <div className="mt-1 flex items-center justify-between">
+              <button onClick={signOut} className="text-purple-600 hover:underline">Sign out</button>
+              <NavLink to="/sample-data" className="text-xs text-gray-400 hover:text-purple-600">Sample data</NavLink>
+            </div>
           </>
         ) : (
           available && <NavLink to="/login" className="text-purple-600 hover:underline">Staff sign in</NavLink>

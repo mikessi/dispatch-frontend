@@ -5,18 +5,19 @@ import RateSettings from "./pages/RateSettings";
 import Customers from "./pages/Customers";
 import CustomerDetail from "./pages/CustomerDetail";
 import Addresses from "./pages/Addresses";
+import DispatchBoard from "./pages/DispatchBoard";
 import Jobs from "./pages/Jobs";
 import Invoices from "./pages/Invoices";
 import Login from "./pages/Login";
+import SampleData from "./pages/SampleData";
+import Trucks from "./pages/Trucks";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import { AuthProvider } from "./context/AuthContext";
 import { DataProvider } from "./context/DataContext";
 import { CompanyProvider } from "./context/CompanyContext";
 import { RatesProvider } from "./context/RatesContext";
 // Temporarily disabled — only the Quotes page is enabled for now.
-// import DispatchBoard from "./pages/DispatchBoard";
 // import DriverList from "./pages/DriverList";
-// import TruckManagement from "./pages/TruckManagement";
 
 export default function App() {
   return (
@@ -30,17 +31,18 @@ export default function App() {
                 <Routes>
                   <Route path="/quotes" element={<Quotes />} />
                   <Route path="/login" element={<Login />} />
+                  <Route path="/dispatch" element={<DispatchBoard />} />
                   <Route path="/jobs" element={<Jobs />} />
                   <Route path="/invoices" element={<Invoices />} />
                   <Route path="/invoices/:id" element={<InvoiceDetail />} />
                   <Route path="/customers" element={<Customers />} />
                   <Route path="/customers/:id" element={<CustomerDetail />} />
                   <Route path="/addresses" element={<Addresses />} />
+                  <Route path="/trucks" element={<Trucks />} />
                   <Route path="/rate-settings" element={<RateSettings />} />
+                  <Route path="/sample-data" element={<SampleData />} />
                   {/* Temporarily disabled:
-                  <Route path="/dispatch" element={<DispatchBoard />} />
                   <Route path="/drivers" element={<DriverList />} />
-                  <Route path="/trucks" element={<TruckManagement />} />
                   */}
                   <Route path="*" element={<Navigate to="/quotes" replace />} />
                 </Routes>

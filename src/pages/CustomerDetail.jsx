@@ -5,11 +5,11 @@ import RequireSignIn from "../components/RequireSignIn";
 import {
   Card, Field, Message, inputClass, primaryButtonClass, secondaryButtonClass, dangerButtonClass,
 } from "../components/ui";
-import { useAddresses, useCustomers } from "../context/DataContext";
+import { useCustomers } from "../context/DataContext";
 import { countRateOverrides } from "../utils/customerRates";
 import { tidyField, tidyRecord } from "../utils/format";
 
-const EMPTY_DETAILS = { name: '', street: '', city: '', state: '', zip: '', phone: '', email: '', notes: '' };
+const EMPTY_DETAILS = { name: '', phone: '', email: '', notes: '' };
 const EMPTY_CONTACT = { name: '', title: '', phone: '', email: '' };
 
 const pickDetails = (customer) =>
@@ -62,23 +62,6 @@ function DetailsForm({ customer, onSave, onDelete }) {
           </Field>
           <Field label="Main email">
             <input type="email" {...bind('email')} className={inputClass} />
-          </Field>
-        </div>
-      </Card>
-
-      <Card title="Address">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-          <Field label="Street" className="md:col-span-6">
-            <input type="text" {...bind('street')} className={inputClass} />
-          </Field>
-          <Field label="City" className="md:col-span-3">
-            <input type="text" {...bind('city')} className={inputClass} />
-          </Field>
-          <Field label="State" className="md:col-span-1">
-            <input type="text" {...bind('state')} maxLength={2} className={`${inputClass} uppercase`} />
-          </Field>
-          <Field label="ZIP" className="md:col-span-2">
-            <input type="text" {...bind('zip')} className={inputClass} />
           </Field>
         </div>
       </Card>
@@ -217,7 +200,6 @@ function CustomerView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const customers = useCustomers();
-  const addresses = useAddresses();
   const [tab, setTab] = useState('details');
   const isNew = id === 'new';
   const customer = isNew ? null : customers.byId(id);
@@ -245,7 +227,6 @@ function CustomerView() {
     navigate('/customers', { replace: true });
   };
 
-  const linkedAddresses = customer ? addresses.items.filter((address) => address.customerId === customer.id) : [];
   const tabs = customer
     ? [
         { key: 'details', label: 'Details' },
@@ -280,24 +261,7 @@ function CustomerView() {
       {isNew && <DetailsForm customer={null} onSave={handleCreate} />}
 
       {customer && tab === 'details' && (
-        <>
-          <DetailsForm customer={customer} onSave={(details) => customers.update(customer.id, details)} onDelete={handleDelete} />
-          <Card title="Addresses" actions={<Link to="/addresses" className="text-sm text-purple-600 hover:underline">Manage addresses</Link>}>
-            {linkedAddresses.length === 0 ? (
-              <p className="text-sm text-gray-600">No addresses are linked to this customer yet.</p>
-            ) : (
-              <ul className="text-sm divide-y">
-                {linkedAddresses.map((address) => (
-                  <li key={address.id} className="py-2">
-                    <span className="font-medium">{address.fullName || address.companyName}</span>
-                    <span className="text-gray-600"> — {[address.street, address.city, address.state, address.zip].filter(Boolean).join(', ')}</span>
-                    {address.zone && <span className="ml-2 text-purple-700 font-medium">Zone {address.zone}</span>}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-        </>
+        <DetailsForm customer={customer} onSave={(details) => customers.update(customer.id, details)} onDelete={handleDelete} />
       )}
 
       {customer && tab === 'contacts' && (

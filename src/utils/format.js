@@ -52,6 +52,10 @@ const FORMATTERS = {
   zip: (text) => collapse(text).toUpperCase(),
   phone: formatPhone,
   proNumber: (text) => collapse(text).toUpperCase(),
+  truckId: (text) => collapse(text).toUpperCase(),
+  vin: (text) => collapse(text).toUpperCase().replace(/\s/g, ''),
+  make: titleCase,
+  model: titleCase,
   referenceNumber: (text) => collapse(text).toUpperCase(),
   email: formatEmail,
 };
@@ -82,4 +86,19 @@ export const addDays = (iso, days) => {
   const [year, month, day] = iso.split('-').map(Number);
   const date = new Date(Date.UTC(year, month - 1, day + days));
   return date.toISOString().slice(0, 10);
+};
+
+// Now, in the user's own time zone, as YYYY-MM-DDTHH:mm (what <input type="datetime-local"> uses)
+export const nowLocalDateTime = () => {
+  const now = new Date();
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+};
+
+// "2026-10-07T14:05" -> "10/07/2026 2:05 PM"
+export const formatDateTime = (value) => {
+  if (!value) return '';
+  const [date, time = ''] = value.split('T');
+  const [hours, minutes] = time.split(':').map(Number);
+  if (isNaN(hours)) return formatDate(date);
+  return `${formatDate(date)} ${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${hours < 12 ? 'AM' : 'PM'}`;
 };

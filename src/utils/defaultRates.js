@@ -1,3 +1,5 @@
+import { cityZones } from "./cityZones";
+
 // Built-in prices. Saved rates from the Rate Settings page override these.
 export const DEFAULT_RATES = {
   // Per-zone price tables: MIN charge, per-lb rate by weight tier, MAX charge
@@ -47,7 +49,11 @@ export const DEFAULT_RATES = {
     "Stop Over Charge": 50,
     "Storage Charge $10/Pallet/Per Day": 10,
     "THC + Processing Fee per $100 Covered": 15
-  }
+  },
+  // Optional description for a charge, by name
+  accessoryDetails: {},
+  // City -> zone list used by the city lookup on Quotes and Addresses
+  cityZones
 };
 
 // Fill anything missing from saved rates (e.g. a newly added charge) with defaults
@@ -65,6 +71,10 @@ export const withDefaults = (saved) => {
     tolls: { ...DEFAULT_RATES.tolls, ...saved.tolls },
     transfer: { ...DEFAULT_RATES.transfer, ...saved.transfer },
     ptt: { ...DEFAULT_RATES.ptt, ...saved.ptt },
-    accessoryCharges: { ...DEFAULT_RATES.accessoryCharges, ...saved.accessoryCharges }
+    // The saved list is the whole list: charges can be renamed, added or deleted
+    accessoryCharges: saved.accessoryCharges ? { ...saved.accessoryCharges } : DEFAULT_RATES.accessoryCharges,
+    accessoryDetails: { ...saved.accessoryDetails },
+    // Like charges, the saved city list is the whole list
+    cityZones: Array.isArray(saved.cityZones) ? saved.cityZones : DEFAULT_RATES.cityZones
   };
 };

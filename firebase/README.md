@@ -10,6 +10,7 @@ What's stored in Firestore:
 | `addresses` | pickup/delivery locations                        | admins       | admins        |
 | `jobs`      | shipments: customer, from/to, pro #, pieces…     | admins       | admins        |
 | `invoices`  | invoices made from jobs, with frozen amounts     | admins       | admins        |
+| `trucks`    | truck ID, make, model, year, VIN                 | admins       | admins        |
 
 Admins are the email(s) listed in `firestore.rules`. Whenever that file changes
 (e.g. a new collection is added), re-publish it: Firestore Database → Rules → paste → Publish.

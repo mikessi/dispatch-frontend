@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { cityZones } from "../utils/cityZones";
+import { useRates } from "../context/RatesContext";
 import { inputClass, labelClass } from "./ui";
 
 const MAX_SUGGESTIONS = 8;
 
-const findMatches = (query) => {
+const findMatches = (cityZones, query) => {
   const q = query.trim().toLowerCase();
   if (!q) return [];
   // Cities starting with the query first, then ones containing it
@@ -21,8 +21,9 @@ export default function CityZoneSearch({ onSelect }) {
   const [selected, setSelected] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
+  const { rates } = useRates();
 
-  const matches = findMatches(query);
+  const matches = findMatches(rates.cityZones, query);
 
   const choose = (match) => {
     setQuery(match.city);

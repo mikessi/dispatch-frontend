@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { addDoc, collection, deleteDoc, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, onSnapshot, updateDoc, writeBatch } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "./AuthContext";
 
@@ -10,6 +10,7 @@ const COLLECTIONS = {
   addresses: { sortBy: 'companyName' },
   jobs: { sortBy: 'date', descending: true },
   invoices: { sortBy: 'invoiceNumber', descending: true },
+  trucks: { sortBy: 'truckId' },
 };
 
 const DataContext = createContext(null);
@@ -59,6 +60,13 @@ export function DataProvider({ children }) {
           return ref.id;
         },
         update: (id, data) => updateDoc(doc(db, name, id), { ...data, updatedAt: new Date().toISOString() }),
+        // Change several records at once, all-or-nothing: [[id, data], …]
+        updateMany: (entries) => {
+          const batch = writeBatch(db);
+          const updatedAt = new Date().toISOString();
+          entries.forEach(([id, data]) => batch.update(doc(db, name, id), { ...data, updatedAt }));
+          return batch.commit();
+        },
         remove: (id) => deleteDoc(doc(db, name, id)),
       };
     }
@@ -72,3 +80,4 @@ export const useCustomers = () => useContext(DataContext).customers;
 export const useAddresses = () => useContext(DataContext).addresses;
 export const useJobs = () => useContext(DataContext).jobs;
 export const useInvoices = () => useContext(DataContext).invoices;
+export const useTrucks = () => useContext(DataContext).trucks;

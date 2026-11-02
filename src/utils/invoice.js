@@ -28,7 +28,7 @@ export const buildCharges = (rates, pricing) => {
   });
 
   const shipment = `${weight.toLocaleString()} ${pricing.weightUnit}`;
-  // e.g. "Ocean Import/Export General Freight"; zone and weight are listed separately on the invoice
+  // e.g. "Ocean Import General Freight"; zone and weight are listed separately on the invoice
   const freight = (move) => `${pricing.transportMode} ${move} General Freight`;
   let lines;
   if (pricing.moveType === 'Transfer') {
@@ -48,7 +48,8 @@ export const buildCharges = (rates, pricing) => {
     ];
   } else {
     lines = [
-      { description: freight('Import/Export'), amount: quote.baseRate },
+      // Import, Export, or Import/Export on invoices made before the two were split
+      { description: freight(pricing.moveType), amount: quote.baseRate },
       { description: 'Fuel surcharge', amount: quote.fuelSurcharge },
       { description: 'Toll', amount: quote.toll },
     ];

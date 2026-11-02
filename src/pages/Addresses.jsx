@@ -1,32 +1,33 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import DataTable from "../components/DataTable";
 import RequireSignIn from "../components/RequireSignIn";
 import {
   Card, Field, Message, inputClass, primaryButtonClass, secondaryButtonClass, dangerButtonClass,
 } from "../components/ui";
-import { useAddresses, useCustomers } from "../context/DataContext";
-import { cityZones } from "../utils/cityZones";
+import { useAddresses } from "../context/DataContext";
+import { useRates } from "../context/RatesContext";
 import { tidyField, tidyRecord } from "../utils/format";
 
 const ZONES = ['A', 'B', 'C', 'D', 'E', 'F'];
 const TYPES = ['Warehouse', 'Airline / Airport', 'Rail', 'Customer', 'Residential', 'Other'];
 const EMPTY_ADDRESS = {
   // companyName is the short name shown in lists; fullName shows in full details
-  companyName: '', fullName: '', type: '', customerId: '',
+  companyName: '', fullName: '', type: '',
   street: '', city: '', state: '', zip: '', zone: '',
   hours: '', contactName: '', phone: '', email: '',
   appointmentRequired: false, appointmentNotes: '', notes: '',
 };
 
-const zoneForCity = (city) =>
+const zoneForCity = (cityZones, city) =>
   cityZones.find((entry) => entry.city.toLowerCase() === city.trim().toLowerCase())?.zone || '';
 
-const matches = (address, customerName, query) =>
-  [address.companyName, address.fullName, address.type, address.street, address.city, address.state, address.zip, address.contactName, customerName]
+const matches = (address, query) =>
+  [address.companyName, address.fullName, address.type, address.street, address.city, address.state, address.zip, address.contactName]
     .join(' ').toLowerCase().includes(query.trim().toLowerCase());
 
-function AddressForm({ initial, customers, onSubmit, onDelete, onCancel }) {
+function AddressForm({ initial, onSubmit, onDelete, onCancel }) {
   const [form, setForm] = useState({ ...EMPTY_ADDRESS, ...initial });
+  const { cityZones } = useRates().rates;
   const [message, setMessage] = useState(null);
   const [saving, setSaving] = useState(false);
   // Typing updates the field; leaving it tidies the text ("palatine" -> "Palatine")
@@ -35,14 +36,14 @@ function AddressForm({ initial, customers, onSubmit, onDelete, onCancel }) {
     onChange: (e) => setForm((prev) => ({ ...prev, [key]: e.target.value })),
     onBlur: () => setForm((prev) => ({ ...prev, [key]: tidyField(key, prev[key]) })),
   });
-  const suggestedZone = zoneForCity(form.city);
+  const suggestedZone = zoneForCity(cityZones, form.city);
 
   const handleCityChange = (e) => {
     const city = e.target.value;
     setForm((prev) => {
       // Follow the zone chart unless the zone was set by hand to something else
-      const wasAuto = prev.zone === '' || prev.zone === zoneForCity(prev.city);
-      return { ...prev, city, zone: wasAuto ? zoneForCity(city) : prev.zone };
+      const wasAuto = prev.zone === '' || prev.zone === zoneForCity(cityZones, prev.city);
+      return { ...prev, city, zone: wasAuto ? zoneForCity(cityZones, city) : prev.zone };
     });
   };
 
@@ -51,7 +52,7 @@ function AddressForm({ initial, customers, onSubmit, onDelete, onCancel }) {
     setSaving(true);
     setMessage(null);
     try {
-      const { id, createdAt, updatedAt, ...data } = form;
+      const { id, createdAt, updatedAt, customerId, ...data } = form;
       await onSubmit(tidyRecord(data));
     } catch (error) {
       console.error(error);
@@ -77,13 +78,6 @@ function AddressForm({ initial, customers, onSubmit, onDelete, onCancel }) {
             <input type="text" list="address-types" {...bind('type')} className={inputClass} />
             <datalist id="address-types">{TYPES.map((type) => <option key={type} value={type} />)}</datalist>
           </Field>
-          <Field label="Customer" hint="Optional — link this location to a customer" className="md:col-span-6">
-            <select {...bind('customerId')} className={inputClass}>
-              <option value="">Not linked</option>
-              {customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
-            </select>
-          </Field>
-
           <Field label="Street" className="md:col-span-6">
             <input type="text" {...bind('street')} className={inputClass} />
           </Field>
@@ -153,13 +147,11 @@ function AddressForm({ initial, customers, onSubmit, onDelete, onCancel }) {
 
 function AddressBook() {
   const addresses = useAddresses();
-  const customers = useCustomers();
   const [query, setQuery] = useState('');
   // null = closed, {} = adding, an address = editing
   const [editing, setEditing] = useState(null);
 
-  const customerName = (address) => customers.byId(address.customerId)?.name || '';
-  const visible = addresses.items.filter((address) => matches(address, customerName(address), query));
+  const visible = addresses.items.filter((address) => matches(address, query));
 
   const handleSubmit = async (data) => {
     if (editing.id) await addresses.update(editing.id, data);
@@ -173,6 +165,40 @@ function AddressBook() {
     setEditing(null);
   };
 
+  const columns = [
+    {
+      key: 'name', label: 'Name', width: 280,
+      render: (address) => (
+        <>
+          <span className="font-medium text-purple-700">{address.companyName}</span>
+          {address.fullName && <p className="text-gray-700">{address.fullName}</p>}
+          {address.type && <p className="text-gray-500">{address.type}</p>}
+        </>
+      ),
+    },
+    {
+      key: 'address', label: 'Address', width: 260,
+      render: (address) => (
+        <>
+          {address.street && <p>{address.street}</p>}
+          <p>{[address.city, [address.state, address.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')}</p>
+        </>
+      ),
+    },
+    { key: 'zone', label: 'Zone', width: 70, render: (address) => <span className="font-medium">{address.zone}</span> },
+    {
+      key: 'contact', label: 'Contact', width: 190,
+      render: (address) => (
+        <>
+          {address.contactName && <p>{address.contactName}</p>}
+          {address.phone && <p className="text-gray-600">{address.phone}</p>}
+        </>
+      ),
+    },
+    { key: 'hours', label: 'Hours', width: 220, render: (address) => address.hours || '' },
+    { key: 'appointment', label: 'Appt.', width: 100, render: (address) => (address.appointmentRequired ? 'Required' : '') },
+  ];
+
   return (
     <div className="p-1 space-y-4">
       <div className="flex items-center justify-between">
@@ -184,76 +210,33 @@ function AddressBook() {
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by name, full name, customer, street, city or ZIP"
+        placeholder="Search by name, full name, street, city or ZIP"
         className={inputClass}
       />
 
-      <Card>
-        {addresses.status === 'loading' && <p className="text-sm text-gray-600">Loading addresses…</p>}
-        {addresses.status === 'error' && (
-          <p className="text-sm text-red-600">
-            Couldn’t load addresses. The database rules may not allow it yet — see firebase/README.md.
-          </p>
-        )}
-        {addresses.status === 'ready' && addresses.items.length === 0 && (
-          <p className="text-sm text-gray-600">No addresses yet. Add pickup and delivery locations here.</p>
-        )}
-        {addresses.status === 'ready' && addresses.items.length > 0 && visible.length === 0 && (
-          <p className="text-sm text-gray-600">No addresses match “{query}”.</p>
-        )}
-        {visible.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="text-left text-gray-600 border-b">
-                  <th className="py-2 pr-4 font-medium">Name</th>
-                  <th className="py-2 pr-4 font-medium">Address</th>
-                  <th className="py-2 pr-4 font-medium">Zone</th>
-                  <th className="py-2 pr-4 font-medium">Customer</th>
-                  <th className="py-2 pr-4 font-medium">Contact</th>
-                  <th className="py-2 font-medium">Appt.</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((address) => (
-                  <tr key={address.id} className="border-b last:border-0 hover:bg-gray-50 align-top">
-                    <td className="py-2 pr-4">
-                      <button onClick={() => setEditing(address)} className="font-medium text-purple-700 hover:underline text-left">
-                        {address.companyName}
-                      </button>
-                      {address.fullName && <p className="text-gray-700">{address.fullName}</p>}
-                      {address.type && <p className="text-gray-500">{address.type}</p>}
-                    </td>
-                    <td className="py-2 pr-4">
-                      {address.street && <p>{address.street}</p>}
-                      <p>{[address.city, [address.state, address.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')}</p>
-                    </td>
-                    <td className="py-2 pr-4 font-medium">{address.zone}</td>
-                    <td className="py-2 pr-4">
-                      {address.customerId && customerName(address) && (
-                        <Link to={`/customers/${address.customerId}`} className="text-purple-700 hover:underline">
-                          {customerName(address)}
-                        </Link>
-                      )}
-                    </td>
-                    <td className="py-2 pr-4">
-                      {address.contactName && <p>{address.contactName}</p>}
-                      {address.phone && <p className="text-gray-600">{address.phone}</p>}
-                    </td>
-                    <td className="py-2">{address.appointmentRequired ? 'Required' : ''}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
+      {visible.length === 0 ? (
+        <Card>
+          {addresses.status === 'loading' && <p className="text-sm text-gray-600">Loading addresses…</p>}
+          {addresses.status === 'error' && (
+            <p className="text-sm text-red-600">
+              Couldn’t load addresses. The database rules may not allow it yet — see firebase/README.md.
+            </p>
+          )}
+          {addresses.status === 'ready' && addresses.items.length === 0 && (
+            <p className="text-sm text-gray-600">No addresses yet. Add pickup and delivery locations here.</p>
+          )}
+          {addresses.status === 'ready' && addresses.items.length > 0 && visible.length === 0 && (
+            <p className="text-sm text-gray-600">No addresses match “{query}”.</p>
+          )}
+        </Card>
+      ) : (
+        <DataTable storageKey="addresses" columns={columns} rows={visible} onRowClick={setEditing} />
+      )}
 
       {editing && (
         <AddressForm
           key={editing.id || 'new'}
           initial={editing}
-          customers={customers.items}
           onSubmit={handleSubmit}
           onDelete={handleDelete}
           onCancel={() => setEditing(null)}
