@@ -27,7 +27,7 @@ export default function App() {
           <CompanyProvider>
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 print:bg-none print:bg-white">
               <Navigation />
-              <main className="ml-64 w-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in print:ml-0 print:p-0">
+              <main className="md:ml-64 w-auto min-w-0 px-3 sm:px-6 lg:px-8 py-4 sm:py-8 animate-fade-in print:ml-0 print:p-0">
                 <Routes>
                   <Route path="/quotes" element={<Quotes />} />
                   <Route path="/login" element={<Login />} />

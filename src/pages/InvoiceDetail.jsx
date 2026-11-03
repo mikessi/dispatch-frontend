@@ -291,7 +291,7 @@ function InvoiceEditor({ initial, isNew }) {
     <>
       <form onSubmit={handleSubmit} className="p-1 space-y-4 print:hidden">
         {/* Stays in view while scrolling, so the actions are always at hand */}
-        <div className="sticky top-0 z-30 -mx-2 px-2 py-3 flex flex-wrap items-end justify-between gap-3 bg-gray-50/90 backdrop-blur border-b border-gray-200 rounded-b-lg">
+        <div className="sticky top-16 md:top-0 z-30 -mx-2 px-2 py-3 flex flex-wrap items-end justify-between gap-3 bg-gray-50/90 backdrop-blur border-b border-gray-200 rounded-b-lg">
           <div>
             <Link to="/invoices" className="text-sm text-purple-600 hover:underline">← Invoices</Link>
             <h1 className="text-2xl font-bold mt-1">
@@ -330,7 +330,7 @@ function InvoiceEditor({ initial, isNew }) {
                 <Field label="Invoice #" required>
                   <input type="text" required value={form.invoiceNumber} onChange={set('invoiceNumber')} className={inputClass} />
                 </Field>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Field label="Invoice date" required>
                     <input type="date" required value={form.date} onChange={handleDateChange} className={inputClass} />
                   </Field>
@@ -338,7 +338,7 @@ function InvoiceEditor({ initial, isNew }) {
                     <input type="date" value={form.dueDate} onChange={set('dueDate')} className={inputClass} />
                   </Field>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Field label="Status">
                     <select value={form.status} onChange={setStatus} className={inputClass}>
                       <option value="unpaid">Unpaid</option>
@@ -478,6 +478,7 @@ function InvoiceEditor({ initial, isNew }) {
           </Card>
 
           <Card title="Charges">
+            <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="text-left text-xs font-semibold uppercase tracking-wide text-gray-600 border-b">
@@ -551,6 +552,7 @@ function InvoiceEditor({ initial, isNew }) {
                 </tr>
               </tfoot>
             </table>
+            </div>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <select

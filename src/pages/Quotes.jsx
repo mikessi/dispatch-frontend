@@ -434,8 +434,8 @@ export default function Quotes() {
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-96 overflow-y-auto p-2 border border-gray-300 rounded-lg">
                 {Object.entries(accessoryCharges).map(([name, price]) => (
-                  <div key={name} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-                    <label className="flex items-center space-x-2 flex-1">
+                  <div key={name} className="flex flex-wrap items-center justify-between gap-2 p-2 hover:bg-gray-50 rounded">
+                    <label className="flex items-center space-x-2 flex-1 min-w-[10rem]">
                       <input
                         type="checkbox"
                         checked={formData.selectedAccessories.includes(name)}
@@ -541,8 +541,8 @@ export default function Quotes() {
                 ))}
                 
                 {/* Custom Charges Section */}
-                <div className="col-span-2 p-2">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="sm:col-span-2 p-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                     <label className="flex items-center space-x-2">
                       <input
                         type="checkbox"

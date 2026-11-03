@@ -277,15 +277,15 @@ export default function DispatchBoard() {
 
   return (
     <div className="p-2 max-w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">Dispatch Board</h1>
+          <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">Dispatch Board</h1>
           <p className="text-gray-600">Manage and track all dispatch jobs</p>
         </div>
         <div className="flex space-x-4">
           <button
             onClick={handleAdd}
-            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-xl transition-all duration-300 font-semibold flex items-center space-x-2"
+            className="px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-xl transition-all duration-300 font-semibold flex items-center space-x-2"
           >
             <span className="text-xl">+</span>
             <span>Add New Job</span>

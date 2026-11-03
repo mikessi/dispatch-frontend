@@ -18,8 +18,8 @@ export default function ViewJob({ job, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 w-4/5 max-w-6xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-6">
+      <div className="bg-white rounded-lg p-4 sm:p-8 w-full sm:w-4/5 max-w-6xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Job Details</h2>
           <button
@@ -32,7 +32,7 @@ export default function ViewJob({ job, onClose }) {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-4">
             <div>
@@ -109,7 +109,7 @@ export default function ViewJob({ job, onClose }) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Details</label>
-            <div className="mt-1 grid grid-cols-4 gap-4">
+            <div className="mt-1 grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
                 <span className="text-sm text-gray-500">Pieces:</span>
                 <span className="ml-2 text-lg">{job.pcsCount}</span>

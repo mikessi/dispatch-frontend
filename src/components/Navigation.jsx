@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   DocumentTextIcon,
@@ -8,7 +9,9 @@ import {
   MapPinIcon,
   DocumentDuplicateIcon,
   ClipboardDocumentListIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  Bars3Icon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 
 export default function Navigation() {
@@ -29,12 +32,45 @@ export default function Navigation() {
   ];
   const navItems = user ? [...publicItems, ...staffItems] : publicItems;
 
+  // On phones the menu slides in from the left. After each page change, close it
+  // and start the new page at the top.
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+  useEffect(() => {
+    setOpen(false);
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   return (
-    <nav className="fixed left-0 top-0 h-screen w-64 bg-white shadow-lg z-50 flex flex-col print:hidden">
-      <div className="p-6">
-        <div className="gradient-primary text-white px-6 py-3 rounded-xl shadow-lg">
+    <>
+    <header className="md:hidden sticky top-0 z-40 flex items-center gap-3 bg-white/95 backdrop-blur px-4 py-3 shadow print:hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="Open menu"
+        aria-expanded={open}
+        className="-ml-1 rounded-lg p-2 text-gray-700 hover:bg-purple-50"
+      >
+        <Bars3Icon className="h-6 w-6" />
+      </button>
+      <span className="gradient-primary text-white px-3 py-1 rounded-lg text-lg font-bold tracking-tight">Dispatch</span>
+    </header>
+    {open && (
+      <div className="md:hidden fixed inset-0 z-40 bg-black/40 print:hidden" onClick={() => setOpen(false)} aria-hidden="true" />
+    )}
+    <nav className={`fixed left-0 top-0 h-screen w-64 bg-white shadow-lg z-50 flex flex-col print:hidden transition-transform duration-300 md:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className="p-6 flex items-center gap-2">
+        <div className="flex-1 gradient-primary text-white px-6 py-3 rounded-xl shadow-lg">
           <span className="text-2xl font-bold tracking-tight">Dispatch</span>
         </div>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          aria-label="Close menu"
+          className="md:hidden rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+        >
+          <XMarkIcon className="h-6 w-6" />
+        </button>
       </div>
       <div className="flex-1 overflow-y-auto px-4 space-y-2">
         {navItems.map((item) => {
@@ -79,5 +115,6 @@ export default function Navigation() {
         )}
       </div>
     </nav>
+    </>
   );
 } 

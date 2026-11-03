@@ -290,7 +290,7 @@ function RateSettingsEditor() {
   }[status];
 
   return (
-    <div className="p-1 space-y-4 pb-24">
+    <div className="p-1 space-y-4 pb-40 sm:pb-24">
       <div>
         <h1 className="text-2xl font-bold mb-1">Rate Settings</h1>
         <p className="text-sm text-gray-600">{statusText}</p>
@@ -380,8 +380,8 @@ function RateSettingsEditor() {
       <CityZonesEditor rows={cityDraft} onChange={setCityDraft} />
 
       {canEdit && (
-        <div className="fixed bottom-0 left-64 right-0 bg-white border-t shadow-lg px-8 py-3 flex items-center justify-end gap-3 z-40">
-          {isDirty && <span className="text-sm text-amber-600 mr-auto">You have unsaved changes</span>}
+        <div className="fixed bottom-0 left-0 md:left-64 right-0 bg-white border-t shadow-lg px-3 sm:px-8 py-3 flex flex-wrap items-center justify-end gap-2 sm:gap-3 z-30">
+          {isDirty && <span className="text-sm text-amber-600 basis-full sm:basis-auto sm:mr-auto">You have unsaved changes</span>}
           <button
             onClick={() => resetTo(DEFAULT_RATES)}
             className={secondaryButtonClass}

@@ -42,8 +42,8 @@ function TruckForm({ initial, existing, onSubmit, onDelete, onCancel }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center overflow-y-auto p-6">
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-6 space-y-5">
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center overflow-y-auto p-3 sm:p-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-4 sm:p-6 space-y-5">
         <h2 className="text-xl font-semibold text-gray-900 border-b border-gray-100 pb-3">
           {initial.id ? 'Edit truck' : 'Add truck'}
         </h2>

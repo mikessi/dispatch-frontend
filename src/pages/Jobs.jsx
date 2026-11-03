@@ -131,8 +131,8 @@ function JobForm({ initial, customers, addresses, onSubmit, onDelete, onCancel }
   ));
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center overflow-y-auto p-6">
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-xl w-full max-w-4xl p-6 space-y-5">
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center overflow-y-auto p-3 sm:p-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-xl w-full max-w-4xl p-4 sm:p-6 space-y-5">
         <h2 className="text-xl font-semibold text-gray-900 border-b border-gray-100 pb-3">
           {initial.id ? 'Edit job' : 'Add job'}
         </h2>
@@ -172,7 +172,7 @@ function JobForm({ initial, customers, addresses, onSubmit, onDelete, onCancel }
               </select>
               {addressDetails(form.fromAddressId)}
             </Field>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Last free day">
                 <input type="date" {...plain('lastFreeDay')} className={inputClass} />
               </Field>
@@ -197,7 +197,7 @@ function JobForm({ initial, customers, addresses, onSubmit, onDelete, onCancel }
               </select>
               {addressDetails(form.toAddressId)}
             </Field>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Cut-off / lock-out / appt.">
                 <input type="date" {...plain('cutoffDate')} className={inputClass} />
               </Field>
